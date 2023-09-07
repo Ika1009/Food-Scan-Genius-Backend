@@ -1,10 +1,13 @@
 const axios = require('axios');
 
+//https://api.nal.usda.gov/fdc/v1/food/######?api_key=DEMO_KEY
 const API_BASE_URL = 'https://api.nal.usda.gov/fdc'; // Replace with the correct base URL
-const API_KEY = 'Your-API-Key-Here'
+const API_KEY = 'DEMO_KEY'
+
 
 // Example usage:
-getFoodByFdcId(534358, 'full', [203, 204, 205]).then(apiResponse => {
+getFoodByFdcId(534358, 'full').then(apiResponse => {
+    console.log(apiResponse);
     const food = createFoodObject(apiResponse);
     console.log(food);
 }).catch(error => {
@@ -13,10 +16,7 @@ getFoodByFdcId(534358, 'full', [203, 204, 205]).then(apiResponse => {
 
 async function getFoodByFdcId(fdcId, format = 'full', nutrients) {
     try {
-        const response = await axios.get(`${API_BASE_URL}/v1/food/${fdcId}`, {
-            headers: {
-                'Authorization': API_KEY, // Replace with your API key
-            },
+        const response = await axios.get(`https://api.nal.usda.gov/fdc/v1/food/534358?api_key=DEMO_KEY`, {
             params: {
                 format,
                 nutrients,
@@ -26,7 +26,7 @@ async function getFoodByFdcId(fdcId, format = 'full', nutrients) {
         if (response.status === 200) {
             return response.data;
         } else {
-            console.error('Error fetching data:', response.status, response.statusText);
+            console.log('Error fetching data:', response.status, response.statusText);
         }
     } catch (error) {
         console.error('Error:', error.message);
