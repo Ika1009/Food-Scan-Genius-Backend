@@ -1,4 +1,4 @@
-(1) https://openfoodfacts.github.io/api-documentation/
+(1) https://openfoodfacts.github.io/openfoodfacts-server/api/  -  https://github.com/openfoodfacts/api-documentation
 (2) https://fdc.nal.usda.gov/api-guide.html
 (3) https://chompthis.com/api/manage.php
 (4) https://www.upcitemdb.com/wp/docs/main/development/plan/
