@@ -4,8 +4,9 @@ const axios = require('axios');
 //#region OPEN FOOD FACTS
 
 const barcode = '3017624010701';  // Replace with your barcode
+
 getProductByBarcode(barcode).then(response => {
-    console.log(response);
+    //console.log(response);
 }).catch(error => {
     console.error('Error fetching product:', error);
 });
@@ -26,7 +27,6 @@ async function getProductByBarcode(barcode) {
 }
 
 //#endregion
-
 
 //#region USDA API
 
@@ -63,3 +63,5 @@ async function USDA_getFoodByFdcId(fdcId, format = 'full', nutrients) {
 }
 
 //#endregion
+
+//#region UPC
