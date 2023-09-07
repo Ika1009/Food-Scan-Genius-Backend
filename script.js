@@ -1,9 +1,7 @@
 const axios = require('axios');
 
 //https://api.nal.usda.gov/fdc/v1/food/######?api_key=DEMO_KEY
-const API_BASE_URL = 'https://api.nal.usda.gov/fdc'; // Replace with the correct base URL
-const API_KEY = 'DEMO_KEY'
-
+const API_KEY_USDA = '1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9'
 
 // Example usage:
 getFoodByFdcId(534358, 'full').then(apiResponse => {
@@ -16,7 +14,8 @@ getFoodByFdcId(534358, 'full').then(apiResponse => {
 
 async function getFoodByFdcId(fdcId, format = 'full', nutrients) {
     try {
-        const response = await axios.get(`https://api.nal.usda.gov/fdc/v1/food/534358?api_key=DEMO_KEY`, {
+        console.log(`https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${API_KEY_USDA}`);
+        const response = await axios.get(`https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${API_KEY_USDA}`, {
             params: {
                 format,
                 nutrients,
