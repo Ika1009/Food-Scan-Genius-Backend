@@ -1,4 +1,5 @@
-(1) https://openfoodfacts.github.io/openfoodfacts-server/api/  -  https://github.com/openfoodfacts/api-documentation
-(2) https://fdc.nal.usda.gov/api-guide.html
-(3) https://chompthis.com/api/manage.php
-(4) https://www.upcitemdb.com/wp/docs/main/development/plan/
+(1) Open Food Facts: https://openfoodfacts.github.io/openfoodfacts-server/api
+(2) UPCitemDB.com (free developer): https://www.upcitemdb.com/wp/docs/main/development
+(3) USFDA (1m records, free developer): https://fdc.nal.usda.gov/api-guide.html
+(4) Edamam (615k, free developer): https://developer.edamam.com/food-database-api-docs
+(5) Nutritionix: https://developer.nutritionix.com/docs/v1_1/barcodes

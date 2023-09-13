@@ -1,15 +1,16 @@
 const axios = require('axios');
+const barcode = '3017624010701';  // Replace with your barcode
 
 
 //#region OPEN FOOD FACTS
 // Example: https://world.openfoodfacts.net/api/v2/product/3017624010701
 
-const barcode = '3017624010701';  // Replace with your barcode
+let data;
 
 getProductByBarcode(barcode).then(response => {
     //const processedData = processApiResponse(response);
-    const data = extractDataFromApiResponse(response.product);
-    console.log(data);
+    data = extractDataFromApiResponse(response.product);
+    //console.log(data);
 }).catch(error => {
     console.error('Error fetching product:', error);
 });
@@ -105,7 +106,6 @@ function extractDataFromApiResponse(apiResponse) {
     };
 }
 
-
 // function processApiResponseToLabels(data) {
 //     const productData = data.product;
 
@@ -177,20 +177,21 @@ function extractDataFromApiResponse(apiResponse) {
 
 //#region UPC
 
-const upc = '4002293401102';  // Replace with your UPC
-/*getProductByUPC(upc).then(productData => {
-    console.log(productData);
+getProductByUPC(barcode).then(upcResponse => {
+    data = mergeApiResponseWithExtractedData(data, upcResponse);
+
+    //console.log("FULL OBJECT: ", data);
 }).catch(error => {
     console.error('Error fetching product:', error);
-});*/
+});
 
-async function getProductByUPC(upc) {
+async function getProductByUPC(barcode) {
     const BASE_URL = 'https://api.upcitemdb.com/prod/trial/lookup';
 
     try {
         const response = await axios.get(BASE_URL, {
             params: {
-                upc: upc
+                upc: barcode
             }
         });
 
@@ -204,6 +205,178 @@ async function getProductByUPC(upc) {
     }
 }
 
+function mergeApiResponseWithExtractedData(extractedData, apiResponse) {
+    // Fields from the UPC API response
+    const upcItemFields = [
+        'ean', 'title', 'upc', 'gtin', 'elid', 'description', 'brand', 'model', 'color', 
+        'size', 'dimension', 'weight', 'category', 'currency', 'lowest_recorded_price', 
+        'highest_recorded_price', 'images', 'offers', 'user_data'
+    ];
+
+    const upcOfferFields = [
+        'merchant', 'domain', 'title', 'currency', 'list_price', 'price', 'shipping', 
+        'condition', 'availability', 'link', 'updated_t'
+    ];
+
+    // For simplicity, let's focus on the first item in the API response.
+    const item = apiResponse.items[0];
+
+    // Merge top-level fields from UPC API response if they're not in extractedData
+    upcItemFields.forEach(field => {
+        if (!extractedData.topLevel[field] && item[field]) {
+            extractedData.topLevel[field] = item[field];
+        }
+    });
+
+    // Check if the offers field exists in the UPC API response and merge accordingly
+    if (item.offers) {
+        extractedData.offers = item.offers.map(offer => {
+            let offerData = {};
+            upcOfferFields.forEach(field => {
+                if (offer[field]) {
+                    offerData[field] = offer[field];
+                }
+            });
+            return offerData;
+        });
+    }
+
+    return extractedData;
+}
+
+
+//#endregion
+
+
+//#region Edamam
+
+//Application ID: 89003ab9
+//Application Keys: 89379976073355baf935fb83d57677f3
+
+getProductByEdamam(barcode).then(edamamResponse => {
+    //console.log("EDAMAM RESPONSE: ", edamamResponse.hints[0].food);
+
+    data = mergeApiResponseWithEdamamData(data, edamamResponse.hints[0]);
+
+    console.log("-------------------\n", data);
+}).catch(error => {
+    console.error('Error fetching product:', error);
+});
+
+async function getProductByEdamam(barcode) {
+    const BASE_URL = 'https://api.edamam.com/api/food-database/v2/parser';
+    const APP_ID = '89003ab9';
+    const APP_KEY = '89379976073355baf935fb83d57677f3';
+
+    try {
+        const response = await axios.get(BASE_URL, {
+            params: {
+                app_id: APP_ID,
+                app_key: APP_KEY,
+                upc: barcode
+            }
+        });
+
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            console.error('Error fetching data:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('Error:', error.message);
+    }
+}
+
+function mergeApiResponseWithEdamamData(extractedData, apiResponse) {
+    const item = apiResponse.food;
+
+    // If nutrients field does not exist in extractedData, initialize it.
+    if (!extractedData.nutriments) {
+        extractedData.nutriments = {};
+    }
+    const nutrientMapping = {
+        'calcium': 'nutrients[CA]',
+        'carbohydrates': 'nutrients[CHOCDF]',
+        'net-carbohydrates': 'nutrients[CHOCDF.net]',
+        'cholesterol': 'nutrients[CHOLE]',
+        'energy': 'nutrients[ENERC_KCAL]',
+        'monounsaturated-fats': 'nutrients[FAMS]',
+        'polyunsaturated-fats': 'nutrients[FAPU]',
+        'saturated-fats': 'nutrients[FASAT]',
+        'fats': 'nutrients[FAT]',
+        'trans-fats': 'nutrients[FATRN]',
+        'iron': 'nutrients[FE]',
+        'fiber': 'nutrients[FIBTG]',
+        'folic-acid': 'nutrients[FOLAC]',
+        'folate-dfe': 'nutrients[FOLDFE]',
+        'folate-food': 'nutrients[FOLFD]',
+        'potassium': 'nutrients[K]',
+        'magnesium': 'nutrients[MG]',
+        'sodium': 'nutrients[NA]',
+        'niacin': 'nutrients[NIA]',
+        'phosphorus': 'nutrients[P]',
+        'proteins': 'nutrients[PROCNT]',
+        'riboflavin': 'nutrients[RIBF]',
+        'sugars': 'nutrients[SUGAR]',
+        'added-sugars': 'nutrients[SUGAR.added]',
+        'sugar-alcohols': 'nutrients[Sugar.alcohol]',
+        'thiamin': 'nutrients[THIA]',
+        'vitamin-e': 'nutrients[TOCPHA]',
+        'vitamin-a-rae': 'nutrients[VITA_RAE]',
+        'vitamin-b12': 'nutrients[VITB12]',
+        'vitamin-b6': 'nutrients[VITB6A]',
+        'vitamin-c': 'nutrients[VITC]',
+        'vitamin-d': 'nutrients[VITD]',
+        'vitamin-k': 'nutrients[VITK1]',
+        'water': 'nutrients[WATER]',
+        'zinc': 'nutrients[ZN]'
+    };
+       
+    // Iterate over the mapping and update extractedData.
+    for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
+        if (item.nutrients[edamamKey] && (!extractedData.nutriments[extractedKey] || extractedData.nutriments[extractedKey] === null)) {
+            extractedData.nutriments[extractedKey] = item.nutrients[edamamKey];
+        }
+    }
+
+    // Continue with other fields merging...
+
+    // Directly mapped fields
+    const directFields = [
+        'foodId', 'label', 'knownAs', 'brand', 'category', 
+        'categoryLabel', 'foodContentsLabel', 'image', 'servingsPerContainer'
+    ];
+
+    directFields.forEach(field => {
+        if (!extractedData[field] && item[field]) {
+            extractedData[field] = item[field];
+        }
+    });
+
+    // Handling servingSizes
+    if (!extractedData.servingSizes && item.servingSizes) {
+        extractedData.servingSizes = item.servingSizes.map(serving => ({
+            uri: serving.uri,
+            label: serving.label,
+            quantity: serving.quantity
+        }));
+    }
+
+    // Handling measures from the API response
+    if (!extractedData.measures && apiResponse.measures) {
+        extractedData.measures = apiResponse.measures.map(measure => ({
+            uri: measure.uri,
+            label: measure.label,
+            weight: measure.weight
+        }));
+    }
+
+    return extractedData;
+}
+
+
+
+
 //#endregion
 
 
@@ -214,13 +387,13 @@ async function getProductByUPC(upc) {
 const API_KEY_USDA = '1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9'
 
 // Example usage:
-/*USDA_getFoodByFdcId(534358, 'full').then(apiResponse => {
-    console.log(apiResponse);
-    const food = createFoodObject(apiResponse);
-    console.log(food);
-}).catch(error => {
-    console.error('Error fetching data:', error);
-});*/
+// USDA_getFoodByFdcId(534358, 'full').then(apiResponse => {
+//     console.log(apiResponse);
+//     const food = createFoodObject(apiResponse);
+//     console.log(food);
+// }).catch(error => {
+//     console.error('Error fetching data:', error);
+// });
 
 async function USDA_getFoodByFdcId(fdcId, format = 'full', nutrients) {
     try {
