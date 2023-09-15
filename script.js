@@ -191,7 +191,7 @@ function mergeApiResponseWithExtractedData(apiResponse) {
 
 getProductByEdamam(barcode).then(edamamResponse => {
     mergeApiResponseWithEdamamData(edamamResponse.hints[0]);
-    console.log("-------------------\n", data);
+    //console.log("-------------------\n", data);
     name = data.knownAs;
     if (!name || name.trim() === "") {
         name = data.label;
@@ -203,11 +203,12 @@ getProductByEdamam(barcode).then(edamamResponse => {
     if(name !== null && name !== undefined && name !== "")
     {
         console.log("\n\n-----------------------\n\n");
-        // USDA_searchFoodByName(name).then(apiResponse => {
-        //     mergeApiResponseWithUSDAData(apiResponse.foods[0])
-        // }).catch(error => {
-        //     console.error('Error fetching data:', error);
-        // });
+        USDA_searchFoodByName(name).then(apiResponse => {
+            mergeApiResponseWithUSDAData(apiResponse.foods[0])
+            console.log("-------------------\n", data);
+        }).catch(error => {
+            console.error('Error fetching data:', error);
+        });
     }
     }).catch(error => {
         console.error('Error fetching product:', error);
