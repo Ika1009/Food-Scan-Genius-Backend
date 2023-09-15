@@ -1,6 +1,6 @@
 const axios = require('axios');
 const barcode = '3017624010701';  // Replace with your barcode
-
+var name = "";
 
 //#region OPEN FOOD FACTS
 // Example: https://world.openfoodfacts.net/api/v2/product/3017624010701
@@ -175,7 +175,6 @@ function extractDataFromApiResponse(apiResponse) {
 
 //#endregion
 
-
 //#region UPC
 
 getProductByUPC(barcode).then(upcResponse => {
@@ -241,13 +240,11 @@ function mergeApiResponseWithExtractedData(extractedData, apiResponse) {
             return offerData;
         });
     }
-
     return extractedData;
 }
 
 
 //#endregion
-
 
 //#region Edamam
 
@@ -255,11 +252,26 @@ function mergeApiResponseWithExtractedData(extractedData, apiResponse) {
 //Application Keys: 89379976073355baf935fb83d57677f3
 
 getProductByEdamam(barcode).then(edamamResponse => {
-    //console.log("EDAMAM RESPONSE: ", edamamResponse.hints[0].food);
-
     data = mergeApiResponseWithEdamamData(data, edamamResponse.hints[0]);
+    //console.log("-------------------\n", data);
+    name = data.knownAs;
+    if (!name || name.trim() === "") {
+        name = data.label;
+    }
+    if (!name || name.trim() === "") {
+        name = object.topLevel.product_name;
+    }
+    console.log("USDA " + name);
 
-    console.log("-------------------\n", data);
+    if(name !== null && name !== undefined && name !== "")
+    {
+        console.log("\n\n-----------------------\n\n");
+        USDA_searchFoodByName(name).then(apiResponse => {
+            console.log(apiResponse);
+        }).catch(error => {
+            console.error('Error fetching data:', error);
+        });
+    }
 }).catch(error => {
     console.error('Error fetching product:', error);
 });
@@ -290,9 +302,6 @@ async function getProductByEdamam(barcode) {
 
 function mergeApiResponseWithEdamamData(extractedData, apiResponse) {
     const item = apiResponse.food;
-    extractedData.nutriments.fat = null;
-    console.log(item)
-    console.log("---------------------------")
     // If nutrients field does not exist in extractedData, initialize it.
     if (!extractedData.nutriments) {
         extractedData.nutriments = {};
@@ -374,36 +383,25 @@ function mergeApiResponseWithEdamamData(extractedData, apiResponse) {
     //         weight: measure.weight
     //     }));
     // }
-
     return extractedData;
 }
-
-
-
 
 //#endregion
 
 //#region USDA API
-//Example: https://api.nal.usda.gov/fdc/v1/food/534358?api_key=1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9
 
-//https://api.nal.usda.gov/fdc/v1/food/######?api_key=DEMO_KEY
-const API_KEY_USDA = '1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9'
+const API_KEY_USDA = '1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9';
 
-USDA_getFoodByFdcId(534358, 'full').then(apiResponse => {
-    console.log(apiResponse);
-    //const food = createFoodObject(apiResponse);
-    //console.log(food);
-}).catch(error => {
-    console.error('Error fetching data:', error);
-});
-
-async function USDA_getFoodByFdcId(fdcId, format = 'full', nutrients) {
+async function USDA_searchFoodByName(query, pageSize = 25) {
     try {
-        console.log(`https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${API_KEY_USDA}`);
-        const response = await axios.get(`https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${API_KEY_USDA}`, {
+        const response = await axios.get(`https://api.nal.usda.gov/fdc/v1/foods/search`, {
             params: {
-                format,
-                nutrients,
+                query,
+                pageSize,
+                api_key: API_KEY_USDA
+            },
+            headers: {
+                'accept': 'application/json'
             }
         });
 
