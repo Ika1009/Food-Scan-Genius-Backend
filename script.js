@@ -16,6 +16,7 @@ getProductByBarcode(barcode).then(response => {
 });
 
 
+
 async function getProductByBarcode(barcode) {
     const BASE_URL = 'https://world.openfoodfacts.net/api/v2/product/';
 
@@ -289,57 +290,60 @@ async function getProductByEdamam(barcode) {
 
 function mergeApiResponseWithEdamamData(extractedData, apiResponse) {
     const item = apiResponse.food;
-
+    extractedData.nutriments.fat = null;
+    console.log(item)
+    console.log("---------------------------")
     // If nutrients field does not exist in extractedData, initialize it.
     if (!extractedData.nutriments) {
         extractedData.nutriments = {};
     }
     const nutrientMapping = {
-        'calcium': 'nutrients[CA]',
-        'carbohydrates': 'nutrients[CHOCDF]',
-        'net-carbohydrates': 'nutrients[CHOCDF.net]',
-        'cholesterol': 'nutrients[CHOLE]',
-        'energy': 'nutrients[ENERC_KCAL]',
-        'monounsaturated-fats': 'nutrients[FAMS]',
-        'polyunsaturated-fats': 'nutrients[FAPU]',
-        'saturated-fats': 'nutrients[FASAT]',
-        'fats': 'nutrients[FAT]',
-        'trans-fats': 'nutrients[FATRN]',
-        'iron': 'nutrients[FE]',
-        'fiber': 'nutrients[FIBTG]',
-        'folic-acid': 'nutrients[FOLAC]',
-        'folate-dfe': 'nutrients[FOLDFE]',
-        'folate-food': 'nutrients[FOLFD]',
-        'potassium': 'nutrients[K]',
-        'magnesium': 'nutrients[MG]',
-        'sodium': 'nutrients[NA]',
-        'niacin': 'nutrients[NIA]',
-        'phosphorus': 'nutrients[P]',
-        'proteins': 'nutrients[PROCNT]',
-        'riboflavin': 'nutrients[RIBF]',
-        'sugars': 'nutrients[SUGAR]',
-        'added-sugars': 'nutrients[SUGAR.added]',
-        'sugar-alcohols': 'nutrients[Sugar.alcohol]',
-        'thiamin': 'nutrients[THIA]',
-        'vitamin-e': 'nutrients[TOCPHA]',
-        'vitamin-a-rae': 'nutrients[VITA_RAE]',
-        'vitamin-b12': 'nutrients[VITB12]',
-        'vitamin-b6': 'nutrients[VITB6A]',
-        'vitamin-c': 'nutrients[VITC]',
-        'vitamin-d': 'nutrients[VITD]',
-        'vitamin-k': 'nutrients[VITK1]',
-        'water': 'nutrients[WATER]',
-        'zinc': 'nutrients[ZN]'
+        'calcium': 'CA',
+        'carbohydrates': 'CHOCDF',
+        'net-carbohydrates': 'CHOCDF.net',
+        'cholesterol': 'CHOLE',
+        'energy': 'ENERC_KCAL',
+        'monounsaturated-fats': 'FAMS',
+        'polyunsaturated-fats': 'FAPU',
+        'saturated-fats': 'FASAT',
+        'fat': 'FAT',
+        'trans-fats': 'FATRN',
+        'iron': 'FE',
+        'fiber': 'FIBTG',
+        'folic-acid': 'FOLAC',
+        'folate-dfe': 'FOLDFE',
+        'folate-food': 'FOLFD',
+        'potassium': 'K',
+        'magnesium': 'MG',
+        'sodium': 'NA',
+        'niacin': 'NIA',
+        'phosphorus': 'P',
+        'proteins': 'PROCNT',
+        'riboflavin': 'RIBF',
+        'sugars': 'SUGAR',
+        'added-sugars': 'SUGAR.added',
+        'sugar-alcohols': 'Sugar.alcohol',
+        'thiamin': 'THIA',
+        'vitamin-e': 'TOCPHA',
+        'vitamin-a-rae': 'VITA_RAE',
+        'vitamin-b12': 'VITB12',
+        'vitamin-b6': 'VITB6A',
+        'vitamin-c': 'VITC',
+        'vitamin-d': 'VITD',
+        'vitamin-k': 'VITK1',
+        'water': 'WATER',
+        'zinc': 'ZN'
     };
+    
        
     // Iterate over the mapping and update extractedData.
     for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
-        if (item.nutrients[edamamKey] && (!extractedData.nutriments[extractedKey] || extractedData.nutriments[extractedKey] === null)) {
-            extractedData.nutriments[extractedKey] = item.nutrients[edamamKey];
+        if (item.nutrients && (item.nutrients[edamamKey] !== undefined) && (extractedData.nutriments[extractedKey] === null || extractedData.nutriments[extractedKey] === undefined)) {
+            extractedData.nutriments[extractedKey] = item.nutrients[edamamKey] || 0; 
         }
     }
-
-    // Continue with other fields merging...
+    
+    
 
     // Directly mapped fields
     const directFields = [
@@ -354,22 +358,22 @@ function mergeApiResponseWithEdamamData(extractedData, apiResponse) {
     });
 
     // Handling servingSizes
-    if (!extractedData.servingSizes && item.servingSizes) {
-        extractedData.servingSizes = item.servingSizes.map(serving => ({
-            uri: serving.uri,
-            label: serving.label,
-            quantity: serving.quantity
-        }));
-    }
+    // if (!extractedData.servingSizes && item.servingSizes) {
+    //     extractedData.servingSizes = item.servingSizes.map(serving => ({
+    //         uri: serving.uri,
+    //         label: serving.label,
+    //         quantity: serving.quantity
+    //     }));
+    // }
 
     // Handling measures from the API response
-    if (!extractedData.measures && apiResponse.measures) {
-        extractedData.measures = apiResponse.measures.map(measure => ({
-            uri: measure.uri,
-            label: measure.label,
-            weight: measure.weight
-        }));
-    }
+    // if (!extractedData.measures && apiResponse.measures) {
+    //     extractedData.measures = apiResponse.measures.map(measure => ({
+    //         uri: measure.uri,
+    //         label: measure.label,
+    //         weight: measure.weight
+    //     }));
+    // }
 
     return extractedData;
 }
@@ -379,21 +383,19 @@ function mergeApiResponseWithEdamamData(extractedData, apiResponse) {
 
 //#endregion
 
-
 //#region USDA API
 //Example: https://api.nal.usda.gov/fdc/v1/food/534358?api_key=1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9
 
 //https://api.nal.usda.gov/fdc/v1/food/######?api_key=DEMO_KEY
 const API_KEY_USDA = '1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9'
 
-// Example usage:
-// USDA_getFoodByFdcId(534358, 'full').then(apiResponse => {
-//     console.log(apiResponse);
-//     const food = createFoodObject(apiResponse);
-//     console.log(food);
-// }).catch(error => {
-//     console.error('Error fetching data:', error);
-// });
+USDA_getFoodByFdcId(534358, 'full').then(apiResponse => {
+    console.log(apiResponse);
+    //const food = createFoodObject(apiResponse);
+    //console.log(food);
+}).catch(error => {
+    console.error('Error fetching data:', error);
+});
 
 async function USDA_getFoodByFdcId(fdcId, format = 'full', nutrients) {
     try {
