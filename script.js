@@ -397,7 +397,19 @@ function mergeApiResponseWithUSDAData(apiResponse) {
 
 
 //#endregion
+// App ID: 918f9c08
+// API Key: 3b8384ce0ff9e531b1d812f72c675b6c
+// API Key: a03c2c4ed7c49df3b1730537f4aa75d6
+// SEND AS HEADER
+//You can pass a barcode to the /search/item endpoint to look up the nutrition facts for a UPC.
+//  https://trackapi.nutritionix.com/docs/#/default/get_v2_search_item
 
+// https://trackapi.nutritionix.com/v2/search/item
+
+//#region Nutritionix
+
+
+//#endregion
 
 
 
