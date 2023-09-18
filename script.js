@@ -1,21 +1,82 @@
 const axios = require('axios');
 const barcode = '3017624010701';  // Replace with your barcode
 var name = "";
+let data = {};
+
+fetchDataAndProcess(barcode);
+
+async function fetchDataAndProcess(barcode) {
+    // OPEN FOOD FACTS
+    try {
+        const response = await getProductByBarcode(barcode);
+        if(response && response.product)
+            extractDataFromApiResponse(response.product);
+        else {
+            console.error('Unexpected API response structure at Open Food Facts:', nutritionixResponse);
+        }
+    } catch(error) {
+        console.error('Error fetching product at OPEN FOOD FACTS:', error);
+    }
+
+    // UPC
+    try {
+        const upcResponse = await getProductByUPC(barcode);
+        if(upcResponse)
+            mergeApiResponseWithExtractedData(upcResponse);
+        else 
+            console.error('Unexpected API response structure at UPC:', nutritionixResponse);
+    } catch(error) {
+        console.error('Error fetching product at UPC:', error);
+    }
+
+    // Edamam
+    try {
+        const edamamResponse = await getProductByEdamam(barcode);
+        if(edamamResponse && edamamResponse.hints[0]) {
+            mergeApiResponseWithEdamamData(edamamResponse.hints[0]);
+        } else {
+            console.error('Unexpected API response structure at Edamam:', nutritionixResponse);
+        }
+
+        let name = data.knownAs;
+        if (!name || name.trim() === "") {
+            name = data.label;
+        }
+        if (!name || name.trim() === "") {
+            name = object.product_name;
+        }
+
+        if(name && name.trim() !== "") {
+            const usdaResponse = await USDA_searchFoodByName(name);
+            if(usdaResponse && usdaResponse.foods[0]) {
+                mergeApiResponseWithUSDAData(usdaResponse.foods[0]);
+            } else {
+                console.error('Unexpected API response structure at USDA:', nutritionixResponse);
+            }
+        }
+    } catch(error) {
+        console.error('Error fetching product at Edamam or USDA:', error);
+    }
+
+    // Nutritionix
+    try {
+        const nutritionixResponse = await getProductByNutritionix(barcode);
+        if (nutritionixResponse && nutritionixResponse.foods) {
+            mergeApiResponseWithNutritionixData(nutritionixResponse);
+        } else {
+            console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
+        }
+    } catch(error) {
+        console.error('Error fetching data at Nutritionix:', error);
+    }
+
+    // Finally, print out the data
+    console.log(data);
+}
+
 
 //#region OPEN FOOD FACTS
 // Example: https://world.openfoodfacts.net/api/v2/product/3017624010701
-
-let data;
-
-getProductByBarcode(barcode).then(response => {
-    //const processedData = processApiResponse(response);
-    extractDataFromApiResponse(response.product);
-    //console.log(data);
-}).catch(error => {
-    console.error('Error fetching product:', error);
-});
-
-
 
 async function getProductByBarcode(barcode) {
     const BASE_URL = 'https://world.openfoodfacts.net/api/v2/product/';
@@ -25,34 +86,25 @@ async function getProductByBarcode(barcode) {
         if (response.status === 200) {
             return response.data;
         } else {
-            console.error('Error fetching data:', response.status, response.statusText);
+            console.error('Error fetching data at OPEN FOOD FACTS:', response.status, response.statusText);
         }
     } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error at OPEN FOOD FACTS:', error.message);
     }
 }
 
 function extractDataFromApiResponse(apiResponse) {
     const nutrimentFields = [
-        'fat', 'iron', 'salt', 'fiber', 'energy', 'sodium', 'sugars', 'alcohol', 'calcium',
-        'fat_100g', 'fat_unit', 'proteins', 'fat_value', 'iron_100g', 'iron_unit', 'salt_100g', 
-        'salt_unit', 'trans-fat', 'vitamin-a', 'vitamin-c', 'fiber_100g', 'fiber_unit', 'iron_label',
-        'iron_value', 'nova-group', 'salt_value', 'energy-kcal', 'energy_100g', 'energy_unit', 
-        'fat_serving', 'fiber_value', 'sodium_100g', 'sodium_unit', 'sugars_100g', 'sugars_unit', 
-        'alcohol_100g', 'alcohol_unit', 'calcium_100g', 'calcium_unit', 'energy_value', 'iron_serving',
-        'salt_serving', 'sodium_value', 'sugars_value', 'alcohol_value', 'calcium_label', 'calcium_value',
-        'carbohydrates', 'fiber_serving', 'proteins_100g', 'proteins_unit', 'saturated-fat', 'energy_serving',
-        'potassium_100g', 'proteins_value', 'sodium_serving', 'sugars_serving', 'trans-fat_100g', 'trans-fat_unit',
-        'vitamin-a_100g', 'vitamin-a_unit', 'vitamin-c_100g', 'vitamin-c_unit', 'alcohol_serving', 'calcium_serving',
-        'nova-group_100g', 'trans-fat_label', 'trans-fat_value', 'vitamin-a_label', 'vitamin-a_value', 
-        'vitamin-c_label', 'vitamin-c_value', 'cholesterol_100g', 'energy-kcal_100g', 'energy-kcal_unit', 
-        'proteins_serving', 'energy-kcal_value', 'trans-fat_serving', 'vitamin-a_serving', 'vitamin-c_serving',
-        'carbohydrates_100g', 'carbohydrates_unit', 'nova-group_serving', 'nutrition-score-fr', 
-        'nutrition-score-uk', 'saturated-fat_100g', 'saturated-fat_unit', 'carbohydrates_value',
-        'energy-kcal_serving', 'saturated-fat_value', 'carbohydrates_serving', 'saturated-fat_serving',
-        'nutrition-score-fr_100g', 'nutrition-score-uk_100g', 'monounsaturated-fat_100g', 'polyunsaturated-fat_100g',
-        'nutrition-score-fr_serving', 'nutrition-score-uk_serving', 'nutrient_levels'
+        'fat', 'iron', 'salt', 'fiber', 'energy', 'sodium', 'sugars', 'alcohol', 'calcium', 
+        'fat_unit', 'proteins', 'iron_unit', 'salt_unit', 'trans-fat', 'vitamin-a', 'vitamin-c', 
+        'fiber_unit', 'iron_label', 'nova-group', 'energy_unit', 'sodium_unit', 'sugars_unit', 
+        'alcohol_unit', 'calcium_unit', 'carbohydrates', 'proteins_unit', 'saturated-fat', 
+        'energy_serving', 'potassium_100g', 'trans-fat_unit', 'vitamin-a_unit', 'vitamin-c_unit', 
+        'alcohol_serving', 'energy-kcal', 'energy-kcal_unit', 'carbohydrates_unit', 'nutrition-score-fr', 
+        'nutrition-score-uk', 'saturated-fat_unit', 'monounsaturated-fat_100g', 'polyunsaturated-fat_100g', 
+        'nutrient_levels'
     ];
+    
 
     const ingredientsFields = [
         'id', 'rank', 'text', 'vegan', 'vegetarian'
@@ -92,8 +144,10 @@ function extractDataFromApiResponse(apiResponse) {
         let result = {};
         fields.forEach(field => {
             // Only add the field if it exists in the source
-            if (source.hasOwnProperty(field)) { 
-                result[field] = source[field];
+            if (source.hasOwnProperty(field)) {
+                // If the field ends with "_100g", remove that suffix
+                let modifiedField = field.endsWith('_100g') ? field.substring(0, field.length - 5) : field;
+                result[modifiedField] = source[field];
             }
             //result[field] = source[field] || null;
         });
@@ -115,14 +169,6 @@ function extractDataFromApiResponse(apiResponse) {
 
 //#region UPC
 
-getProductByUPC(barcode).then(upcResponse => {
-    mergeApiResponseWithExtractedData(upcResponse);
-
-    //console.log("FULL OBJECT: ", data);
-}).catch(error => {
-    console.error('Error fetching product:', error);
-});
-
 async function getProductByUPC(barcode) {
     const BASE_URL = 'https://api.upcitemdb.com/prod/trial/lookup';
 
@@ -136,10 +182,10 @@ async function getProductByUPC(barcode) {
         if (response.status === 200) {
             return response.data;
         } else {
-            console.error('Error fetching data:', response.status, response.statusText);
+            console.error('Error fetching data at UPC:', response.status, response.statusText);
         }
     } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error at UPC:', error.message);
     }
 }
 
@@ -189,31 +235,6 @@ function mergeApiResponseWithExtractedData(apiResponse) {
 //Application ID: 89003ab9
 //Application Keys: 89379976073355baf935fb83d57677f3
 
-getProductByEdamam(barcode).then(edamamResponse => {
-    mergeApiResponseWithEdamamData(edamamResponse.hints[0]);
-    //console.log("-------------------\n", data);
-    name = data.knownAs;
-    if (!name || name.trim() === "") {
-        name = data.label;
-    }
-    if (!name || name.trim() === "") {
-        name = object.product_name;
-    }
-
-    if(name !== null && name !== undefined && name !== "")
-    {
-        console.log("\n\n-----------------------\n\n");
-        USDA_searchFoodByName(name).then(apiResponse => {
-            mergeApiResponseWithUSDAData(apiResponse.foods[0])
-            console.log("-------------------\n", data);
-        }).catch(error => {
-            console.error('Error fetching data:', error);
-        });
-    }
-    }).catch(error => {
-        console.error('Error fetching product:', error);
-    });
-
 async function getProductByEdamam(barcode) {
     const BASE_URL = 'https://api.edamam.com/api/food-database/v2/parser';
     const APP_ID = '89003ab9';
@@ -231,10 +252,10 @@ async function getProductByEdamam(barcode) {
         if (response.status === 200) {
             return response.data;
         } else {
-            console.error('Error fetching data:', response.status, response.statusText);
+            console.error('Error fetching data at Edamam:', response.status, response.statusText);
         }
     } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error at Edamam:', error.message);
     }
 }
 
@@ -250,11 +271,11 @@ function mergeApiResponseWithEdamamData(apiResponse) {
         'net-carbohydrates': 'CHOCDF.net',
         'cholesterol': 'CHOLE',
         'energy': 'ENERC_KCAL',
-        'monounsaturated-fats': 'FAMS',
-        'polyunsaturated-fats': 'FAPU',
-        'saturated-fats': 'FASAT',
+        'monounsaturated-fat': 'FAMS',
+        'polyunsaturated-fat': 'FAPU',
+        'saturated-fat': 'FASAT',
         'fat': 'FAT',
-        'trans-fats': 'FATRN',
+        'trans-fat': 'FATRN',
         'iron': 'FE',
         'fiber': 'FIBTG',
         'folic-acid': 'FOLAC',
@@ -342,10 +363,10 @@ async function USDA_searchFoodByName(query, pageSize = 50, pageNumber = 1) {
         if (response.status === 200) {
             return response.data;
         } else {
-            console.log('Error fetching data:', response.status, response.statusText);
+            console.log('Error fetching data at USDA:', response.status, response.statusText);
         }
     } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error at USDA:', error.message);
     }
 }
 
@@ -362,7 +383,7 @@ function mergeApiResponseWithUSDAData(apiResponse) {
         'carbohydrates': 'carbohydrates',
         'cholesterol': 'cholesterol',
         'fat': 'fat',
-        'trans-fats': 'transFat',
+        'trans-fat': 'transFat',
         'iron': 'iron',
         'fiber': 'fiber',
         'potassium': 'potassium',
@@ -370,7 +391,7 @@ function mergeApiResponseWithUSDAData(apiResponse) {
         'sugars': 'sugars',
         'protein': 'protein',
         'calories': 'calories',
-        'saturated-fats': 'saturatedFat'
+        'saturated-fat': 'saturatedFat'
     };
     
     // Iterate over the mapping and update data.
@@ -397,22 +418,95 @@ function mergeApiResponseWithUSDAData(apiResponse) {
 
 
 //#endregion
-// App ID: 918f9c08
-// API Key: 3b8384ce0ff9e531b1d812f72c675b6c
-// API Key: a03c2c4ed7c49df3b1730537f4aa75d6
-// SEND AS HEADER
-//You can pass a barcode to the /search/item endpoint to look up the nutrition facts for a UPC.
-//  https://trackapi.nutritionix.com/docs/#/default/get_v2_search_item
-
-// https://trackapi.nutritionix.com/v2/search/item
 
 //#region Nutritionix
 
+const NUTRITIONIX_APP_ID = '918f9c08';
+const NUTRITIONIX_API_KEY = '3b8384ce0ff9e531b1d812f72c675b6c';  // You provided two API keys; I'm using the first one here
+
+async function getProductByNutritionix(barcode) {
+    const BASE_URL = 'https://trackapi.nutritionix.com/v2/search/item';
+    try {
+        const response = await axios.get(BASE_URL, {
+            headers: {
+                'x-app-id': NUTRITIONIX_APP_ID,
+                'x-app-key': NUTRITIONIX_API_KEY
+            },
+            params: {
+                upc: barcode
+            }
+        });
+
+        if (response.status === 200 && response.data && Array.isArray(response.data.foods)) {
+            return response.data;
+        } else {
+            console.error('Error fetching data from Nutritionix or unexpected structure:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('Error at Nutritionix:', error.message);
+    }
+}
+
+function mergeApiResponseWithNutritionixData(apiResponse) {
+    if (!apiResponse || !Array.isArray(apiResponse.foods) || apiResponse.foods.length === 0) {
+        console.warn('mergeApiResponseWithNutritionixData called with invalid apiResponse:', apiResponse);
+        return;  // Exit early if the response isn't as expected
+    }
+
+    const item = apiResponse.foods[0];
+
+    // If nutrients field does not exist in data, initialize it.
+    if (!data.nutriments) {
+        data.nutriments = {};
+    }
+
+    const nutrientMapping = {
+        'calories': 'nf_calories',
+        'total_fat': 'nf_total_fat',
+        'saturated_fat': 'nf_saturated_fat',
+        'cholesterol': 'nf_cholesterol',
+        'sodium': 'nf_sodium',
+        'total_carbohydrate': 'nf_total_carbohydrate',
+        'dietary_fiber': 'nf_dietary_fiber',
+        'sugars': 'nf_sugars',
+        'protein': 'nf_protein',
+        'potassium': 'nf_potassium',
+        'phosphorus': 'nf_p'
+        // ... Add other nutrient mappings as needed
+    };
+    
+    // Iterate over the mapping and update data.
+    for (let [extractedKey, nutritionixKey] of Object.entries(nutrientMapping)) {
+        if (item && (item[nutritionixKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
+            data.nutriments[extractedKey] = item[nutritionixKey] || 0; 
+        }
+    }
+
+    // Directly mapped fields
+    const directFields = {
+        'food_name': 'food_name',
+        'brand_name': 'brand_name',
+        'serving_qty': 'serving_qty',
+        'serving_unit': 'serving_unit',
+        'serving_weight_grams': 'serving_weight_grams',
+        'nix_brand_name': 'nix_brand_name',
+        'nix_brand_id': 'nix_brand_id',
+        'nix_item_name': 'nix_item_name',
+        'nix_item_id': 'nix_item_id',
+        'thumb': 'photo.thumb'
+        // ... Add other fields as needed
+    };
+
+    for (let [dataKey, nutritionixKey] of Object.entries(directFields)) {
+        if (!data[dataKey] && item[nutritionixKey]) {
+            data[dataKey] = item[nutritionixKey];
+        }
+    }
+
+}
+
 
 //#endregion
-
-
-
 
 
 
