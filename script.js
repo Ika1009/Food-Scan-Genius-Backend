@@ -1,16 +1,42 @@
+// // Lambda handler
+// exports.handler = async (event) => {
+//     if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
+//         return {
+//             statusCode: 400,
+//             body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
+//         };
+//     }
+
+//     const barcode = event.queryStringParameters.barcode;
+//     const data = await fetchDataAndProcess(barcode);
+
+//     return {
+//         statusCode: 200,
+//         body: JSON.stringify(data),
+//     };
+// };
+
 const axios = require('axios');
 const barcode = '3017624010701';  // Replace with your barcode
-var name = "";
-let data = {};
 
-fetchDataAndProcess(barcode);
+// Use an async function to await the result
+async function main() {
+    const data = await fetchDataAndProcess(barcode);
+    console.log(data);
+}
 
+// Call the main function
+main();
 async function fetchDataAndProcess(barcode) {
+    let data = {};
+    data.nutriments = {};
+    data.ingredients = [];
+
     // OPEN FOOD FACTS
     try {
         const response = await getProductByBarcode(barcode);
         if(response && response.product)
-            extractDataFromApiResponse(response.product);
+            extractDataFromApiResponse(response.product, data);
         else {
             console.error('Unexpected API response structure at Open Food Facts:', nutritionixResponse);
         }
@@ -22,7 +48,7 @@ async function fetchDataAndProcess(barcode) {
     try {
         const upcResponse = await getProductByUPC(barcode);
         if(upcResponse)
-            mergeApiResponseWithExtractedData(upcResponse);
+            mergeApiResponseWithExtractedData(upcResponse, data);
         else 
             console.error('Unexpected API response structure at UPC:', nutritionixResponse);
     } catch(error) {
@@ -33,7 +59,7 @@ async function fetchDataAndProcess(barcode) {
     try {
         const edamamResponse = await getProductByEdamam(barcode);
         if(edamamResponse && edamamResponse.hints[0]) {
-            mergeApiResponseWithEdamamData(edamamResponse.hints[0]);
+            mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
         } else {
             console.error('Unexpected API response structure at Edamam:', nutritionixResponse);
         }
@@ -49,7 +75,7 @@ async function fetchDataAndProcess(barcode) {
         if(name && name.trim() !== "") {
             const usdaResponse = await USDA_searchFoodByName(name);
             if(usdaResponse && usdaResponse.foods[0]) {
-                mergeApiResponseWithUSDAData(usdaResponse.foods[0]);
+                mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
             } else {
                 console.error('Unexpected API response structure at USDA:', nutritionixResponse);
             }
@@ -62,7 +88,7 @@ async function fetchDataAndProcess(barcode) {
     try {
         const nutritionixResponse = await getProductByNutritionix(barcode);
         if (nutritionixResponse && nutritionixResponse.foods) {
-            mergeApiResponseWithNutritionixData(nutritionixResponse);
+            mergeApiResponseWithNutritionixData(nutritionixResponse, data);
         } else {
             console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
         }
@@ -70,8 +96,7 @@ async function fetchDataAndProcess(barcode) {
         console.error('Error fetching data at Nutritionix:', error);
     }
 
-    // Finally, print out the data
-    console.log(data);
+    return data;
 }
 
 
@@ -93,7 +118,7 @@ async function getProductByBarcode(barcode) {
     }
 }
 
-function extractDataFromApiResponse(apiResponse) {
+function extractDataFromApiResponse(apiResponse, data) {
     const nutrimentFields = [
         'fat', 'iron', 'salt', 'fiber', 'energy', 'sodium', 'sugars', 'alcohol', 'calcium', 
         'fat_unit', 'proteins', 'iron_unit', 'salt_unit', 'trans-fat', 'vitamin-a', 'vitamin-c', 
@@ -144,12 +169,12 @@ function extractDataFromApiResponse(apiResponse) {
         let result = {};
         fields.forEach(field => {
             // Only add the field if it exists in the source
-            if (source.hasOwnProperty(field)) {
-                // If the field ends with "_100g", remove that suffix
-                let modifiedField = field.endsWith('_100g') ? field.substring(0, field.length - 5) : field;
-                result[modifiedField] = source[field];
-            }
-            //result[field] = source[field] || null;
+            // if (source.hasOwnProperty(field)) {
+            //     // If the field ends with "_100g", remove that suffix
+            //     let modifiedField = field.endsWith('_100g') ? field.substring(0, field.length - 5) : field;
+            //     result[modifiedField] = source[field];
+            // }
+            result[field] = source[field] || null;
         });
         return result;
     }
@@ -158,11 +183,10 @@ function extractDataFromApiResponse(apiResponse) {
         return source.map(ingredient => extractFields(fields, ingredient));
     }
 
-    data = {
-        nutriments: extractFields(nutrimentFields, apiResponse.nutriments),
-        ingredients: extractIngredients(ingredientsFields, apiResponse.ingredients),
-        ...extractFields(topLevelFields, apiResponse)
-    };
+    data.nutriments = extractFields(nutrimentFields, apiResponse.nutriments);
+    data.ingredients = extractIngredients(ingredientsFields, apiResponse.ingredients);
+    Object.assign(data, extractFields(topLevelFields, apiResponse));    
+    
 }
 
 //#endregion
@@ -189,7 +213,7 @@ async function getProductByUPC(barcode) {
     }
 }
 
-function mergeApiResponseWithExtractedData(apiResponse) {
+function mergeApiResponseWithExtractedData(apiResponse, data) {
     // Fields from the UPC API response
     const upcItemFields = [
         'ean', 'title', 'upc', 'gtin', 'elid', 'description', 'brand', 'model', 'color', 
@@ -224,7 +248,6 @@ function mergeApiResponseWithExtractedData(apiResponse) {
             return offerData;
         });
     }
-    return data;
 }
 
 
@@ -259,12 +282,8 @@ async function getProductByEdamam(barcode) {
     }
 }
 
-function mergeApiResponseWithEdamamData(apiResponse) {
+function mergeApiResponseWithEdamamData(apiResponse, data) {
     const item = apiResponse.food;
-    // If nutrients field does not exist in data, initialize it.
-    if (!data.nutriments) {
-        data.nutriments = {};
-    }
     const nutrientMapping = {
         'calcium': 'CA',
         'carbohydrates': 'CHOCDF',
@@ -302,8 +321,7 @@ function mergeApiResponseWithEdamamData(apiResponse) {
         'water': 'WATER',
         'zinc': 'ZN'
     };
-    
-       
+ 
     // Iterate over the mapping and update data.
     for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
         if (item.nutrients && (item.nutrients[edamamKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
@@ -311,8 +329,6 @@ function mergeApiResponseWithEdamamData(apiResponse) {
         }
     }
     
-    
-
     // Directly mapped fields
     const directFields = [
         'foodId', 'label', 'knownAs', 'brand', 'category', 
@@ -370,7 +386,7 @@ async function USDA_searchFoodByName(query, pageSize = 50, pageNumber = 1) {
     }
 }
 
-function mergeApiResponseWithUSDAData(apiResponse) {
+function mergeApiResponseWithUSDAData(apiResponse, data) {
     const item = apiResponse;
 
     // If nutrients field does not exist in data, initialize it.
@@ -447,7 +463,7 @@ async function getProductByNutritionix(barcode) {
     }
 }
 
-function mergeApiResponseWithNutritionixData(apiResponse) {
+function mergeApiResponseWithNutritionixData(apiResponse, data) {
     if (!apiResponse || !Array.isArray(apiResponse.foods) || apiResponse.foods.length === 0) {
         console.warn('mergeApiResponseWithNutritionixData called with invalid apiResponse:', apiResponse);
         return;  // Exit early if the response isn't as expected
