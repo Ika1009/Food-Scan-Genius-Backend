@@ -44,18 +44,17 @@ Creating **Food Scan Genius** involved using a cutting-edge technology stack. He
 
 ### 📱 Frontend
 - <img src="./icons/flutter-icon.png" alt="Flutter Icon" width="10"/>
-- **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
+### 📱 Frontend
+- 🦋 **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
 
 ### 🌍 Backend
-- <img src="./icons/nodejs-icon.png" alt="NodeJS Icon" width="100"/>
-- **Node.js**: Efficient and scalable server operations backbone.
-- <img src="./icons/aws-icon.png" alt="AWS Icon" width="100"/>
-- **AWS (Amazon Web Services)**:
+- 🟩 **Node.js**: Efficient and scalable server operations backbone.
+- ☁️ **AWS (Amazon Web Services)**:
     - **AWS Lambda**: Backend functions responsive to HTTP requests.
     - **Amazon API Gateway**: Manage and route backend requests.
   
 ### 🗄️ Database
-- ![MongoDB Icon](url_to_mongodb_icon.png) **MongoDB**: Flexible NoSQL database, apt for our extensive product SKUs.
+-  🍃  **MongoDB**: Flexible NoSQL database, apt for our extensive product SKUs.
 
 Our commitment is to innovation. We continuously integrate new technologies to ensure **Food Scan Genius** remains at the technological forefront.
 
