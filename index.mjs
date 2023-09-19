@@ -30,7 +30,7 @@ async function fetchDataAndProcess(barcode) {
         if(response && response.product)
             extractDataFromApiResponse(response.product, data);
         else {
-            console.error('Unexpected API response structure at Open Food Facts:', nutritionixResponse);
+            console.error('Unexpected API response structure at Open Food Facts:', response);
         }
     } catch(error) {
         console.error('Error fetching product at OPEN FOOD FACTS:', error);
@@ -42,7 +42,7 @@ async function fetchDataAndProcess(barcode) {
         if(upcResponse)
             mergeApiResponseWithExtractedData(upcResponse, data);
         else 
-            console.error('Unexpected API response structure at UPC:', nutritionixResponse);
+            console.error('Unexpected API response structure at UPC:', upcResponse);
     } catch(error) {
         console.error('Error fetching product at UPC:', error);
     }
@@ -53,7 +53,7 @@ async function fetchDataAndProcess(barcode) {
         if(edamamResponse && edamamResponse.hints[0]) {
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
         } else {
-            console.error('Unexpected API response structure at Edamam:', nutritionixResponse);
+            console.error('Unexpected API response structure at Edamam:', edamamResponse);
         }
 
         let name = data.knownAs;
@@ -69,7 +69,7 @@ async function fetchDataAndProcess(barcode) {
             if(usdaResponse && usdaResponse.foods[0]) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
             } else {
-                console.error('Unexpected API response structure at USDA:', nutritionixResponse);
+                console.error('Unexpected API response structure at USDA:', usdaResponse);
             }
         }
     } catch(error) {
