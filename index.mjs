@@ -28,8 +28,10 @@ async function fetchDataAndProcess(barcode) {
     try {
         const response = await getProductByBarcode(barcode);
         if(response && response.product)
+        {
             extractDataFromApiResponse(response.product, data);
             console.log("OPEN FOOD FACTS SUCCESS")
+        }
         else {
             console.error('Unexpected API response structure at Open Food Facts:', response);
         }
@@ -40,9 +42,9 @@ async function fetchDataAndProcess(barcode) {
     // UPC
     try {
         const upcResponse = await getProductByUPC(barcode);
-        if(upcResponse)
+        if(upcResponse){
             mergeApiResponseWithExtractedData(upcResponse, data);
-            console.log("UPC SUCCESS")
+            console.log("UPC SUCCESS")}
         else 
             console.error('Unexpected API response structure at UPC:', upcResponse);
     } catch(error) {
