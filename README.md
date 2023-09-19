@@ -43,8 +43,6 @@ Available on both **iOS** and **Android**, you can start with Food Scan Genius f
 Creating **Food Scan Genius** involved using a cutting-edge technology stack. Here's a breakdown:
 
 ### 📱 Frontend
-- <img src="./icons/flutter-icon.png" alt="Flutter Icon" width="10"/>
-### 📱 Frontend
 - 🦋 **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
 
 ### 🌍 Backend
