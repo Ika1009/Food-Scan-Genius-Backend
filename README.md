@@ -46,7 +46,7 @@ Creating **Food Scan Genius** involved using a cutting-edge technology stack. He
 - 🦋 **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
 
 ### 🌍 Backend
-- 🟩 **Node.js**: Efficient and scalable server operations backbone.
+- 🌐 **Node.js**: Efficient and scalable server operations backbone.
 - ☁️ **AWS (Amazon Web Services)**:
     - **AWS Lambda**: Backend functions responsive to HTTP requests.
     - **Amazon API Gateway**: Manage and route backend requests.
