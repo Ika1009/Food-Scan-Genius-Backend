@@ -1,32 +1,24 @@
-// // Lambda handler
-// exports.handler = async (event) => {
-//     if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
-//         return {
-//             statusCode: 400,
-//             body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
-//         };
-//     }
+// Assuming axios is installed as an npm package, import it.
+import axios from 'axios';
 
-//     const barcode = event.queryStringParameters.barcode;
-//     const data = await fetchDataAndProcess(barcode);
+export const handler = async (event) => {
+    if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
+        };
+    }
 
-//     return {
-//         statusCode: 200,
-//         body: JSON.stringify(data),
-//     };
-// };
-
-const axios = require('axios');
-const barcode = '3017624010701';  // Replace with your barcode
-
-// Use an async function to await the result
-async function main() {
+    const barcode = event.queryStringParameters.barcode;
+    console.log("BARCODE: " + barcode);
     const data = await fetchDataAndProcess(barcode);
-    console.log(data);
-}
+    
+    return {
+        statusCode: 200,
+        body: JSON.stringify(data),
+    };
+};
 
-// Call the main function
-main();
 async function fetchDataAndProcess(barcode) {
     let data = {};
     data.nutriments = {};
@@ -523,13 +515,6 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
 
 
 //#endregion
-
-
-
-
-
-
-
 
 
 
