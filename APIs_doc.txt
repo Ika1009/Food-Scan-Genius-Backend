@@ -3,3 +3,6 @@
 (3) USFDA (1m records, free developer): https://fdc.nal.usda.gov/api-guide.html
 (4) Edamam (615k, free developer): https://developer.edamam.com/food-database-api-docs
 (5) Nutritionix: https://developer.nutritionix.com/docs/v1_1/barcodes
+
+
+AWS - https://blog.appsignal.com/2022/03/23/build-serverless-apis-with-nodejs-and-aws-lambda.html
