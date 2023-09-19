@@ -29,6 +29,7 @@ async function fetchDataAndProcess(barcode) {
         const response = await getProductByBarcode(barcode);
         if(response && response.product)
             extractDataFromApiResponse(response.product, data);
+            console.log("OPEN FOOD FACTS SUCCESS")
         else {
             console.error('Unexpected API response structure at Open Food Facts:', response);
         }
@@ -41,6 +42,7 @@ async function fetchDataAndProcess(barcode) {
         const upcResponse = await getProductByUPC(barcode);
         if(upcResponse)
             mergeApiResponseWithExtractedData(upcResponse, data);
+            console.log("UPC SUCCESS")
         else 
             console.error('Unexpected API response structure at UPC:', upcResponse);
     } catch(error) {
@@ -52,6 +54,7 @@ async function fetchDataAndProcess(barcode) {
         const edamamResponse = await getProductByEdamam(barcode);
         if(edamamResponse && edamamResponse.hints[0]) {
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
+            console.log("EDAMAM SUCCESS")
         } else {
             console.error('Unexpected API response structure at Edamam:', edamamResponse);
         }
@@ -68,6 +71,7 @@ async function fetchDataAndProcess(barcode) {
             const usdaResponse = await USDA_searchFoodByName(name);
             if(usdaResponse && usdaResponse.foods[0]) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
+                console.log("USDA SUCCESS")
             } else {
                 console.error('Unexpected API response structure at USDA:', usdaResponse);
             }
@@ -77,16 +81,17 @@ async function fetchDataAndProcess(barcode) {
     }
 
     // Nutritionix
-    try {
+    /*try {
         const nutritionixResponse = await getProductByNutritionix(barcode);
         if (nutritionixResponse && nutritionixResponse.foods) {
             mergeApiResponseWithNutritionixData(nutritionixResponse, data);
+            console.log("Nutritionix SUCCESS")
         } else {
             console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
         }
     } catch(error) {
         console.error('Error fetching data at Nutritionix:', error);
-    }
+    }*/
 
     return data;
 }
