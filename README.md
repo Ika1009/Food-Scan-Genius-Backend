@@ -1,6 +1,6 @@
 # Food Scan Genius: Your Ultimate Guide to Smart Food Choices
 
-![Food Scan Genius Logo](url_to_your_logo.png)
+![Food Scan Genius Logo](./icons/fsg.png)
 
 Living with food allergies or specific dietary restrictions? Say hello to **Food Scan Genius**, the app designed with you in mind. Dive into the most comprehensive and reliable tool for food choices tailored to your needs.
 
@@ -43,11 +43,11 @@ Available on both **iOS** and **Android**, you can start with Food Scan Genius f
 Creating **Food Scan Genius** involved using a cutting-edge technology stack. Here's a breakdown:
 
 ### 📱 Frontend
-- ![Flutter Icon](url_to_flutter_icon.png) **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
+- ![Flutter Icon](./icons/flutter-icon.png) **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
 
 ### 🌍 Backend
-- ![NodeJS Icon](url_to_nodejs_icon.png) **Node.js**: Efficient and scalable server operations backbone.
-- ![AWS Icon](url_to_aws_icon.png) **AWS (Amazon Web Services)**:
+- ![NodeJS Icon](./icons/flutter-icon.png) **Node.js**: Efficient and scalable server operations backbone.
+- ![AWS Icon](./icons/aws-icon.png) **AWS (Amazon Web Services)**:
     - **AWS Lambda**: Backend functions responsive to HTTP requests.
     - **Amazon API Gateway**: Manage and route backend requests.
   
