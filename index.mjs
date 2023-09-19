@@ -61,7 +61,7 @@ async function fetchDataAndProcess(barcode) {
             name = data.label;
         }
         if (!name || name.trim() === "") {
-            name = object.product_name;
+            name = data.product_name;
         }
 
         if(name && name.trim() !== "") {
