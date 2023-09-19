@@ -43,11 +43,14 @@ Available on both **iOS** and **Android**, you can start with Food Scan Genius f
 Creating **Food Scan Genius** involved using a cutting-edge technology stack. Here's a breakdown:
 
 ### 📱 Frontend
-- <img src="./icons/flutter-icon.png" alt="Flutter Icon" width="50"/> **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
+- <img src="./icons/flutter-icon.png" alt="Flutter Icon" width="10"/>
+- **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
 
 ### 🌍 Backend
-- ![NodeJS Icon](./icons/nodejs-icon.png) **Node.js**: Efficient and scalable server operations backbone.
-- ![AWS Icon](./icons/aws-icon.png) **AWS (Amazon Web Services)**:
+- <img src="./icons/nodejs-icon.png" alt="NodeJS Icon" width="100"/>
+- **Node.js**: Efficient and scalable server operations backbone.
+- <img src="./icons/aws-icon.png" alt="AWS Icon" width="100"/>
+- **AWS (Amazon Web Services)**:
     - **AWS Lambda**: Backend functions responsive to HTTP requests.
     - **Amazon API Gateway**: Manage and route backend requests.
   
