@@ -62,8 +62,4 @@ Break free from the painstaking label readings. Embrace the genius of effortless
 
 ---
 
-**Note:** Ensure you have appropriate licenses and permissions to use all the technologies listed, and this list accurately represents the technologies you've used in the project.
-
----
-
 Made with ❤️ by Ilija Dončić and Nikola Pešić.
