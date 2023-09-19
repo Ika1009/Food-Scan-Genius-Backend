@@ -30,9 +30,9 @@ Navigating the world of food products, especially with food allergies or dietary
 
 > "Food Scan Genius has been a game-changer for me. I can't imagine life without it!" - **Sarah T.**
   
-> "This app has revolutionized the way I navigate the grocery store. It's a lifesaver!" - **Lisa M.**
+> "This app has revolutionized the way I navigate the grocery store. It's a lifesaver!" - **Nikoleta D.**
   
-> "Highly recommend for anyone looking for safe products and restaurants." - **John P.**
+> "Highly recommend for anyone looking for safe products and restaurants." - **Marko Đ.**
 
 ## 🥑 Get Started
 
@@ -40,29 +40,30 @@ Available on both **iOS** and **Android**, you can start with Food Scan Genius f
 
 ## 🛠 Technology Stack
 
-In our pursuit of creating the most comprehensive and user-friendly food scanning application, we've integrated a robust selection of technologies. Below, we outline the major tools, frameworks, and platforms that power **Food Scan Genius**:
+Creating **Food Scan Genius** involved using a cutting-edge technology stack. Here's a breakdown:
 
-## Frontend: 
-- **Flutter**: Our choice for a cross-platform mobile app development. This framework ensures a smooth, high-performance experience across both iOS and Android devices.
+### 📱 Frontend
+- ![Flutter Icon](url_to_flutter_icon.png) **Flutter**: Cross-platform mobile app development ensuring seamless performance on iOS and Android.
+
+### 🌍 Backend
+- ![NodeJS Icon](url_to_nodejs_icon.png) **Node.js**: Efficient and scalable server operations backbone.
+- ![AWS Icon](url_to_aws_icon.png) **AWS (Amazon Web Services)**:
+    - **AWS Lambda**: Backend functions responsive to HTTP requests.
+    - **Amazon API Gateway**: Manage and route backend requests.
   
-## Backend: 
-- **Node.js**: The backbone of our server operations, known for its efficiency and scalability.
-  
-- **AWS (Amazon Web Services)**: Leveraging various AWS services, we've ensured that our application is scalable, reliable, and secure. Some of the services we use include:
-    - **AWS Lambda**: For running backend functions in response to HTTP requests.
-    - **Amazon API Gateway**: Handling and routing requests to our backend.
-  
-## Database: 
-- **MongoDB**: A NoSQL database that provides flexibility in storing large sets of data, perfect for our vast product SKUs.
-  
-We're continually exploring new technologies and updates to ensure **Food Scan Genius** remains at the forefront of innovation. We believe in using the right tool for the job and are committed to maintaining a cutting-edge tech stack.
+### 🗄️ Database
+- ![MongoDB Icon](url_to_mongodb_icon.png) **MongoDB**: Flexible NoSQL database, apt for our extensive product SKUs.
+
+Our commitment is to innovation. We continuously integrate new technologies to ensure **Food Scan Genius** remains at the technological forefront.
 
 ## 🌯 Wrapping it up
 
 Break free from the painstaking label readings. Embrace the genius of effortless, safe, and smart food choices. Get Food Scan Genius today and revolutionize your food shopping experience!
+
 ---
 
 **Note:** Ensure you have appropriate licenses and permissions to use all the technologies listed, and this list accurately represents the technologies you've used in the project.
+
 ---
 
 Made with ❤️ by Ilija Dončić and Nikola Pešić.
