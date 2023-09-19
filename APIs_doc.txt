@@ -6,3 +6,4 @@
 
 
 AWS - https://blog.appsignal.com/2022/03/23/build-serverless-apis-with-nodejs-and-aws-lambda.html
+https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html#apigateway-add
