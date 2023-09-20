@@ -42,9 +42,11 @@ async function fetchDataAndProcess(barcode) {
     // UPC
     try {
         const upcResponse = await getProductByUPC(barcode);
-        if(upcResponse){
+        if(upcResponse)
+        {
             mergeApiResponseWithExtractedData(upcResponse, data);
-            console.log("UPC SUCCESS")}
+            console.log("UPC SUCCESS")
+        }
         else 
             console.error('Unexpected API response structure at UPC:', upcResponse);
     } catch(error) {
@@ -83,7 +85,7 @@ async function fetchDataAndProcess(barcode) {
     }
 
     // Nutritionix
-    /*try {
+    try {
         const nutritionixResponse = await getProductByNutritionix(barcode);
         if (nutritionixResponse && nutritionixResponse.foods) {
             mergeApiResponseWithNutritionixData(nutritionixResponse, data);
@@ -93,7 +95,7 @@ async function fetchDataAndProcess(barcode) {
         }
     } catch(error) {
         console.error('Error fetching data at Nutritionix:', error);
-    }*/
+    }
 
     return data;
 }

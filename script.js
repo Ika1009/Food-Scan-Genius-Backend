@@ -1,24 +1,32 @@
-// Assuming axios is installed as an npm package, import it.
-import axios from 'axios';
+// // Lambda handler
+// exports.handler = async (event) => {
+//     if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
+//         return {
+//             statusCode: 400,
+//             body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
+//         };
+//     }
 
-export const handler = async (event) => {
-    if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
-        };
-    }
+//     const barcode = event.queryStringParameters.barcode;
+//     const data = await fetchDataAndProcess(barcode);
 
-    const barcode = event.queryStringParameters.barcode;
-    console.log("BARCODE: " + barcode);
+//     return {
+//         statusCode: 200,
+//         body: JSON.stringify(data),
+//     };
+// };
+
+const axios = require('axios');
+const barcode = '3017624010701';  // Replace with your barcode
+
+// Use an async function to await the result
+async function main() {
     const data = await fetchDataAndProcess(barcode);
-    
-    return {
-        statusCode: 200,
-        body: JSON.stringify(data),
-    };
-};
+    console.log(data);
+}
 
+// Call the main function
+main();
 async function fetchDataAndProcess(barcode) {
     let data = {};
     data.nutriments = {};
@@ -28,12 +36,9 @@ async function fetchDataAndProcess(barcode) {
     try {
         const response = await getProductByBarcode(barcode);
         if(response && response.product)
-        {
             extractDataFromApiResponse(response.product, data);
-            console.log("OPEN FOOD FACTS SUCCESS")
-        }
         else {
-            console.error('Unexpected API response structure at Open Food Facts:', response);
+            console.error('Unexpected API response structure at Open Food Facts:', nutritionixResponse);
         }
     } catch(error) {
         console.error('Error fetching product at OPEN FOOD FACTS:', error);
@@ -43,12 +48,9 @@ async function fetchDataAndProcess(barcode) {
     try {
         const upcResponse = await getProductByUPC(barcode);
         if(upcResponse)
-        {
             mergeApiResponseWithExtractedData(upcResponse, data);
-            console.log("UPC SUCCESS")
-        }
         else 
-            console.error('Unexpected API response structure at UPC:', upcResponse);
+            console.error('Unexpected API response structure at UPC:', nutritionixResponse);
     } catch(error) {
         console.error('Error fetching product at UPC:', error);
     }
@@ -58,9 +60,8 @@ async function fetchDataAndProcess(barcode) {
         const edamamResponse = await getProductByEdamam(barcode);
         if(edamamResponse && edamamResponse.hints[0]) {
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
-            console.log("EDAMAM SUCCESS")
         } else {
-            console.error('Unexpected API response structure at Edamam:', edamamResponse);
+            console.error('Unexpected API response structure at Edamam:', nutritionixResponse);
         }
 
         let name = data.knownAs;
@@ -68,16 +69,15 @@ async function fetchDataAndProcess(barcode) {
             name = data.label;
         }
         if (!name || name.trim() === "") {
-            name = data.product_name;
+            name = object.product_name;
         }
 
         if(name && name.trim() !== "") {
             const usdaResponse = await USDA_searchFoodByName(name);
             if(usdaResponse && usdaResponse.foods[0]) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
-                console.log("USDA SUCCESS")
             } else {
-                console.error('Unexpected API response structure at USDA:', usdaResponse);
+                console.error('Unexpected API response structure at USDA:', nutritionixResponse);
             }
         }
     } catch(error) {
@@ -85,17 +85,16 @@ async function fetchDataAndProcess(barcode) {
     }
 
     // Nutritionix
-    /*try {
+    try {
         const nutritionixResponse = await getProductByNutritionix(barcode);
         if (nutritionixResponse && nutritionixResponse.foods) {
             mergeApiResponseWithNutritionixData(nutritionixResponse, data);
-            console.log("Nutritionix SUCCESS")
         } else {
             console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
         }
     } catch(error) {
         console.error('Error fetching data at Nutritionix:', error);
-    }*/
+    }
 
     return data;
 }
@@ -524,6 +523,13 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
 
 
 //#endregion
+
+
+
+
+
+
+
 
 
 
