@@ -1,5 +1,8 @@
-// Assuming axios is installed as an npm package, import it.
 import axios from 'axios';
+import AWS from 'aws-sdk';
+
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
+
 
 export const handler = async (event) => {
     if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
@@ -11,14 +14,21 @@ export const handler = async (event) => {
 
     const barcode = event.queryStringParameters.barcode;
     console.log("BARCODE: " + barcode);
+
     const data = await fetchDataAndProcess(barcode);
     const analysis = processApiResponseToLabels(data);
-    
+
+    let response = JSON.stringify({
+        data: data,
+        analysis: analysis
+    });
+    await uploadToDynamoDB(barcode, response, "fsg");
     return {
         statusCode: 200,
-        body: JSON.stringify(data),
+        body: response
     };
 };
+
 
 async function fetchDataAndProcess(barcode) {
     let data = {};
@@ -101,6 +111,27 @@ async function fetchDataAndProcess(barcode) {
     return data;
 }
 
+async function uploadToDynamoDB(barcode, response, tableName) {
+    if (!barcode) {
+        throw new Error("A valid barcode is required.");
+    }
+
+    const params = {
+        TableName: tableName,
+        Item: {
+            barcode: barcode, // Unique primary key
+            response: response
+        }
+    };
+
+    try {
+        await dynamoDb.put(params).promise();
+        console.log(`Data for barcode ${barcode} has been saved to DynamoDB.`);
+    } catch (error) {
+        console.error("Error saving data to DynamoDB", error);
+        throw error;
+    }
+}
 
 //#region OPEN FOOD FACTS
 // Example: https://world.openfoodfacts.net/api/v2/product/3017624010701
