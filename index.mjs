@@ -15,20 +15,66 @@ export const handler = async (event) => {
     const barcode = event.queryStringParameters.barcode;
     console.log("BARCODE: " + barcode);
 
-    const data = await fetchDataAndProcess(barcode);
-    const analysis = processApiResponseToLabels(data);
+    let response = await getFromDynamoDB(barcode);
+    if (!response) {
+        const data = await fetchDataAndProcess(barcode);
+        const analysis = processApiResponseToLabels(data);
+        response = JSON.stringify({
+            data: data,
+            analysis: analysis
+        });
+        await uploadToDynamoDB(barcode, response);
+    }
+    else
+    {
+        console.log("ALREADY EXISTS IN THE TABLEEE");
+    }
 
-    let response = JSON.stringify({
-        data: data,
-        analysis: analysis
-    });
-    await uploadToDynamoDB(barcode, response, "fsg");
     return {
         statusCode: 200,
         body: response
     };
 };
 
+async function getFromDynamoDB(barcode) {
+    const params = {
+        TableName: "fsg",
+        Key: {
+            barcode: barcode
+        }
+    };
+
+    try {
+        const result = await dynamoDb.get(params).promise();
+        return result.Item ? result.Item.response : null;
+    } catch (error) {
+        console.error("Error fetching data from DynamoDB", error);
+        throw error;
+    }
+}
+
+
+async function uploadToDynamoDB(barcode, response) {
+    if (!barcode) {
+        throw new Error("A valid barcode is required.");
+    }
+
+    const params = {
+        TableName: "fsg",
+        Item: {
+            barcode: barcode, // Unique primary key
+            response: response
+        }
+    };
+
+    try {
+        await dynamoDb.put(params).promise();
+        console.log(`Data for barcode ${barcode} has been saved to DynamoDB.`);
+    } catch (error) {
+        console.error("Error saving data to DynamoDB", error);
+        throw error;
+    }
+}
 
 async function fetchDataAndProcess(barcode) {
     let data = {};
@@ -111,27 +157,6 @@ async function fetchDataAndProcess(barcode) {
     return data;
 }
 
-async function uploadToDynamoDB(barcode, response, tableName) {
-    if (!barcode) {
-        throw new Error("A valid barcode is required.");
-    }
-
-    const params = {
-        TableName: tableName,
-        Item: {
-            barcode: barcode, // Unique primary key
-            response: response
-        }
-    };
-
-    try {
-        await dynamoDb.put(params).promise();
-        console.log(`Data for barcode ${barcode} has been saved to DynamoDB.`);
-    } catch (error) {
-        console.error("Error saving data to DynamoDB", error);
-        throw error;
-    }
-}
 
 //#region OPEN FOOD FACTS
 // Example: https://world.openfoodfacts.net/api/v2/product/3017624010701
