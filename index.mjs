@@ -3,37 +3,60 @@ import AWS from 'aws-sdk';
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
+function isValidBarcode(barcode) {
+    const regex = /^\d+$/;
+    return regex.test(barcode);
+}
+
 
 export const handler = async (event) => {
-    if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
+    try {          
+        if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
+            };
+        }
+
+        const barcode = event.queryStringParameters.barcode;
+        if (!isValidBarcode(barcode)) {
+            console.error('Invalid barcode format:', barcode);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: 'Invalid barcode format.' }),
+            };
+        }
+        console.log("BARCODE: " + barcode);
+
+        let response = await getFromDynamoDB(barcode);
+        if (!response) {
+            console.log("DOESN'T EXIST IN THE TABLE< HERE IS THE DYNAMO RESPONSE:", response);
+            const data = await fetchDataAndProcess(barcode);
+            const analysis = processApiResponseToLabels(data);
+            response = JSON.stringify({
+                data: data,
+                analysis: analysis
+            });
+            await uploadToDynamoDB(barcode, response);
+        }
+        else
+        {
+            console.log("ALREADY EXISTS IN THE TABLEEE");
+        }
+
         return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
+            statusCode: 200,
+            body: response
+        };
+    } 
+    catch (error) {
+        console.error("Handler error:", error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "Handler error: " + error}),
         };
     }
-
-    const barcode = event.queryStringParameters.barcode;
-    console.log("BARCODE: " + barcode);
-
-    let response = await getFromDynamoDB(barcode);
-    if (!response) {
-        const data = await fetchDataAndProcess(barcode);
-        const analysis = processApiResponseToLabels(data);
-        response = JSON.stringify({
-            data: data,
-            analysis: analysis
-        });
-        await uploadToDynamoDB(barcode, response);
-    }
-    else
-    {
-        console.log("ALREADY EXISTS IN THE TABLEEE");
-    }
-
-    return {
-        statusCode: 200,
-        body: response
-    };
+    
 };
 
 async function getFromDynamoDB(barcode) {
@@ -165,7 +188,7 @@ async function getProductByBarcode(barcode) {
     const BASE_URL = 'https://world.openfoodfacts.net/api/v2/product/';
 
     try {
-        const response = await axios.get(`${BASE_URL}${barcode}`);
+        const response = await axios.get(`${BASE_URL}${barcode}`, { timeout: 5000 });
         if (response.status === 200) {
             return response.data;
         } else {
@@ -258,7 +281,8 @@ async function getProductByUPC(barcode) {
         const response = await axios.get(BASE_URL, {
             params: {
                 upc: barcode
-            }
+            },
+            timeout: 3000
         });
 
         if (response.status === 200) {
@@ -327,7 +351,8 @@ async function getProductByEdamam(barcode) {
                 app_id: APP_ID,
                 app_key: APP_KEY,
                 upc: barcode
-            }
+            },
+            timeout: 3000
         });
 
         if (response.status === 200) {
@@ -431,7 +456,8 @@ async function USDA_searchFoodByName(query, pageSize = 50, pageNumber = 1) {
         const response = await axios.get(endpoint, {
             headers: {
                 'accept': 'application/json'
-            }
+            },
+            timeout: 3000
         });
 
         if (response.status === 200) {
@@ -508,7 +534,8 @@ async function getProductByNutritionix(barcode) {
             },
             params: {
                 upc: barcode
-            }
+            },
+            timeout: 3000
         });
 
         if (response.status === 200 && response.data && Array.isArray(response.data.foods)) {

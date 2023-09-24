@@ -1,0 +1,8 @@
+Hi, so the first milestone is completed, as the backend is completely done. From the combining of the APIs, the analysis, and the uploading to DynamoDB on AWS. Also, the API gateway is created and AWS is completely set up.
+Here is the URL from the API gateway which is used to call the code: https://ucxvaqjhf0.execute-api.us-east-1.amazonaws.com/main?barcode=3017624010701
+
+Regarding the UI, it is almost finished and it is getting filled up with the data from the API now, I'll have you take a look at it when it's done.
+
+Let me know if you have any questions or if any errors occur, I'll be here to answer them as soon as I can. 
+
+Thank you and have a wonderful weekend!
