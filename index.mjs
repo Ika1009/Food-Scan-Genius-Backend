@@ -10,29 +10,45 @@ function isValidBarcode(barcode) {
 
 export const handler = async (event) => {
     try {          
-        if (!event.queryStringParameters) {
+        if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'Parameters are missing.' }),
+                body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
             };
         }
 
         const { barcode, latitude, longitude, userId } = event.queryStringParameters;
-        if (!barcode || !latitude || !longitude || !userId) {
+        console.log(`Parameters received - barcode: ${barcode}, latitude: ${latitude}, longitude: ${longitude}, userId: ${userId}`); // Log statement 3
+
+        if (!barcode || !latitude || !longitude || !userId || !isValidBarcode(barcode)) {
+            console.log("One or more required parameters are missing."); // Log statement 4
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'Missing required parameters.' }),
+                body: JSON.stringify({ error: 'Missing required parameters or invalid format.' }),
             };
         }
 
-        // Rest of the code remains the same, checking barcode validity, etc.
+        // Call the new function to upload data to the new table.
+        await uploadToLogsTable(barcode, latitude, longitude, userId);
 
         let response = await getFromDynamoDB(barcode);
         if (!response) {
-            // other logic
-            await uploadToDynamoDB(barcode, response, latitude, longitude, userId);
+            console.log("Doesn't exist in the dynamodb, uploading: ", response);
+            const data = await fetchDataAndProcess(barcode);
+            const analysis = processApiResponseToLabels(data);
+            response = JSON.stringify({
+                data: data,
+                analysis: analysis
+            });
+            await uploadToDynamoDB(barcode, response);
         }
-        // Rest of the handler function remains same
+        else
+            console.log("Already exists in the database");
+
+        return {
+            statusCode: 200,
+            body: response
+        };
     } 
     catch (error) {
         console.error("Handler error:", error);
@@ -40,34 +56,9 @@ export const handler = async (event) => {
             statusCode: 500,
             body: JSON.stringify({ error: "Handler error: " + error}),
         };
-    } 
+    }
+    
 };
-
-// Modify uploadToDynamoDB to accept and store additional parameters
-async function uploadToDynamoDB(barcode, response, latitude, longitude, userId) {
-    if (!barcode) {
-        throw new Error("A valid barcode is required.");
-    }
-
-    const params = {
-        TableName: "fsg",
-        Item: {
-            barcode: barcode, // Unique primary key
-            response: response,
-            latitude: latitude,
-            longitude: longitude,
-            userId: userId
-        }
-    };
-
-    try {
-        await dynamoDb.put(params).promise();
-        console.log(`Data for barcode ${barcode} has been saved to DynamoDB.`);
-    } catch (error) {
-        console.error("Error saving data to DynamoDB", error);
-        throw error;
-    }
-}
 
 async function getFromDynamoDB(barcode) {
     const params = {
@@ -86,6 +77,56 @@ async function getFromDynamoDB(barcode) {
     }
 }
 
+
+async function uploadToDynamoDB(barcode, response) {
+    if (!barcode) {
+        throw new Error("A valid barcode is required.");
+    }
+
+    const params = {
+        TableName: "fsg",
+        Item: {
+            barcode: barcode, // Unique primary key
+            response: response
+        }
+    };
+
+    try {
+        await dynamoDb.put(params).promise();
+        console.log(`Data for barcode ${barcode} has been saved to DynamoDB.`);
+    } catch (error) {
+        console.error("Error saving data to DynamoDB", error);
+        throw error;
+    }
+}
+
+async function uploadToLogsTable(barcode, latitude, longitude, userId) {
+    if (!barcode || !latitude || !longitude || !userId) {
+        throw new Error("All parameters are required.");
+    }
+
+    // Getting the current timestamp.
+    const timestamp = Date.now().toString();
+
+    const params = {
+        TableName: "logs", // Change this to your new table name
+        Item: {
+            userId: userId,
+            timestamp: timestamp,
+            barcode: barcode,
+            latitude: latitude,
+            longitude: longitude
+        }
+    };
+
+    try {
+        await dynamoDb.put(params).promise();
+        console.log(`Data for barcode ${barcode} has been saved to the new table.`);
+    } catch (error) {
+        console.error("Error saving data to the new DynamoDB table", error);
+        throw error;
+    }
+}
 
 async function fetchDataAndProcess(barcode) {
     let data = {};
