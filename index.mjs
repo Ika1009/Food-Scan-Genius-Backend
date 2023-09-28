@@ -43,24 +43,6 @@ export const handler = async (event) => {
     } 
 };
 
-async function getFromDynamoDB(barcode) {
-    const params = {
-        TableName: "fsg",
-        Key: {
-            barcode: barcode
-        }
-    };
-
-    try {
-        const result = await dynamoDb.get(params).promise();
-        return result.Item ? result.Item.response : null;
-    } catch (error) {
-        console.error("Error fetching data from DynamoDB", error);
-        throw error;
-    }
-}
-
-
 // Modify uploadToDynamoDB to accept and store additional parameters
 async function uploadToDynamoDB(barcode, response, latitude, longitude, userId) {
     if (!barcode) {
@@ -83,6 +65,23 @@ async function uploadToDynamoDB(barcode, response, latitude, longitude, userId) 
         console.log(`Data for barcode ${barcode} has been saved to DynamoDB.`);
     } catch (error) {
         console.error("Error saving data to DynamoDB", error);
+        throw error;
+    }
+}
+
+async function getFromDynamoDB(barcode) {
+    const params = {
+        TableName: "fsg",
+        Key: {
+            barcode: barcode
+        }
+    };
+
+    try {
+        const result = await dynamoDb.get(params).promise();
+        return result.Item ? result.Item.response : null;
+    } catch (error) {
+        console.error("Error fetching data from DynamoDB", error);
         throw error;
     }
 }
