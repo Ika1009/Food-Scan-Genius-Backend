@@ -9,3 +9,16 @@ https://ucxvaqjhf0.execute-api.us-east-1.amazonaws.com/main?barcode=301762401070
 
 https://us-east-1.console.aws.amazon.com/apigateway/main/apis/ucxvaqjhf0/stages?api=ucxvaqjhf0&experience=rest&region=us-east-1
 https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/fetchDataAndProcessFn?newFunction=true&tab=code
+
+
+
+https://stackoverflow.com/questions/3117645/how-to-get-food-product-data-from-barcode
+In case anyone else is looking for this info in 2021, you can get this data directly from the USDA's Food Data Central API, which is public domain. One of their endpoints has a query param, which supports keywords and, as a little tinkering revealed, UPCs! For instance, here's a query for a snack I had laying around:
+
+https://api.nal.usda.gov/fdc/v1/foods/search?query=850126007120&pageSize=10&api_key=DEMO_KEY
+
+API keys can be had with an email address. Hope this is useful to someone!
+
+https://world.openfoodfacts.org/data
+
+api.scangeni.us
