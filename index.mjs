@@ -28,8 +28,9 @@ export const handler = async (event) => {
             };
         }
 
+        let timezone = getTimezone(latitude, longitude)[0];
         // Call the new function to upload data to the new table.
-        await uploadToLogsTable(barcode, latitude, longitude, userId);
+        await uploadToLogsTable(barcode, latitude, longitude, userId, timezone);
 
         let response = await getFromDynamoDB(barcode);
         if (!response) {
@@ -59,6 +60,19 @@ export const handler = async (event) => {
     }
     
 };
+
+// Import the geo-tz library
+const geoTz = require('geo-tz')
+
+// Define a function to get timezone
+function getTimezone(latitude, longitude) {
+  // Use the find method from geo-tz to get the timezone
+  const timezones = geoTz(latitude, longitude)
+  if (timezones.length === 0) {
+    return ["unknown"];
+  }
+  return timezones;
+}
 
 async function getFromDynamoDB(barcode) {
     const params = {
@@ -100,8 +114,8 @@ async function uploadToDynamoDB(barcode, response) {
     }
 }
 
-async function uploadToLogsTable(barcode, latitude, longitude, userId) {
-    if (!barcode || !latitude || !longitude || !userId) {
+async function uploadToLogsTable(barcode, latitude, longitude, userId, timezone) {
+    if (!barcode || !latitude || !longitude || !userId || !timezone) {
         throw new Error("All parameters are required.");
     }
 
@@ -115,7 +129,8 @@ async function uploadToLogsTable(barcode, latitude, longitude, userId) {
             timestamp: timestamp,
             barcode: barcode,
             latitude: latitude,
-            longitude: longitude
+            longitude: longitude,
+            timezone: timezone
         }
     };
 
