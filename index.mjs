@@ -62,7 +62,7 @@ export const handler = async (event) => {
 };
 
 // Import the geo-tz library
-const geoTz = require('geo-tz')
+import { find as geoTz } from 'geo-tz';
 
 // Define a function to get timezone
 function getTimezone(latitude, longitude) {

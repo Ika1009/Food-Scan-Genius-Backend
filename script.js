@@ -1,4 +1,21 @@
-// // Lambda handler
+
+// Import the geo-tz library
+const geoTz = require('geo-tz').find;
+
+// Define a function to get timezone
+function getTimezone(latitude, longitude) {
+  // Use the find method from geo-tz to get the timezone
+  const timezones = geoTz(latitude, longitude)
+  if (timezones.length === 0) {
+    return ["unknown"];
+  }
+  return timezones;
+}
+
+let timezone = getTimezone(40.7128, -74.0060)[0];
+console.log(timezone);
+
+/*// // Lambda handler
 // exports.handler = async (event) => {
 //     if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
 //         return {
@@ -620,3 +637,4 @@ function processApiResponseToLabels(productData) {
     return result;
 }
 
+*/
