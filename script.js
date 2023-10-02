@@ -1,19 +1,118 @@
+const axios = require('axios');
+const fs = require('fs');
 
-// Import the geo-tz library
-const geoTz = require('geo-tz').find;
-
-// Define a function to get timezone
-function getTimezone(latitude, longitude) {
-  // Use the find method from geo-tz to get the timezone
-  const timezones = geoTz(latitude, longitude)
-  if (timezones.length === 0) {
-    return ["unknown"];
+async function fetchAnalysis() {
+    const latitude = 34.0522;
+    const longitude = -118.2437;
+    const userId = "test";
+    const baseUrl = 'https://api.scangeni.us/';
+  
+    const headers = [
+        'BarCodeNum', 'TimeStamp', 'ErrorCode',
+        'Brands', 'Quantity', 'Categories', 'ProductName', 'ImageUrl',
+        'celery', 'cereals_containing_gluten', 'crustaceans', 'eggs', 'fish',
+        'lupin', 'milk', 'molluscs', 'mustard', 'nuts', 'peanuts', 'sesame_seeds',
+        'soya_beans', 'sulphur_dioxide', 'Vegan', 'LactoVegetarian', 'OvoVegetarian',
+        'LactoOvoVegetarian', 'Pescatarian', 'WhiteMeatOnly', 'RedMeatOnly', 'Halal',
+        'Kosher', 'Beef', 'Jain', 'Onion', 'Keto', 'Paleo', 'Mediterranean',
+        'SugarFree', 'Local', 'Organic', 'GeneticallyModified', 'FullyRecycled',
+        'PartRecycled', 'ABCDERatings', 'HighSugarSaltSpecificProducts', 'CountryOfOrigin'
+    ];
+  
+    fs.writeFileSync('analysis.csv', headers.join(',') + '\n');
+  
+    const barcodes = fs.readFileSync('barcodes.txt', 'utf-8').split('\n');
+    for (let i = 0; i < barcodes.length; i++) {
+      const barcode = barcodes[i].trim();
+      try {
+        let response = await axios.get(baseUrl, {
+          params: {
+            barcode: barcode,
+            latitude: latitude,
+            longitude: longitude,
+            userId: userId
+          }
+        });
+        response = response.data;
+        console.log(response.data);
+        if (isEmpty(response.data.nutriments) && isEmpty(response.data.ingredients)) {
+          const noProductFound = Array(headers.length).fill('No product found');
+          noProductFound[0] = barcode; // Put the barcode in the first column
+          fs.appendFileSync('analysis.csv', noProductFound.join(',') + '\n');
+        } else {
+          const analysis = response.analysis;
+          const additionalData = {
+            brands: response.data.brand,
+            quantity: response.data.quantity,
+            categories: response.data.categories,
+            productName: response.data.product_name,
+            imageUrl: response.data.image_url,
+            imageUrl: response.data.description
+          };
+  
+          const flattenedAnalysis = flattenAnalysis(analysis, additionalData);
+          fs.appendFileSync('analysis.csv', flattenedAnalysis.join(',') + '\n');
+        }
+  
+        // Remove processed barcode from barcodes array and update the file
+        barcodes.splice(i, 1);
+        i--; // Adjust index because we removed an item
+        fs.writeFileSync('barcodes.txt', barcodes.join('\n'));
+  
+      } catch (error) {
+        console.error(`Error fetching data for barcode ${barcode}: `, error);
+      }
+    }
   }
-  return timezones;
+
+function flattenAnalysis(analysis, additionalData) {
+  // Updated to include new data fields
+  const flatAnalysis = [
+    analysis.BarCodeNum,
+    analysis.TimeStamp,
+    analysis.ErrorCode,
+    additionalData.brands,
+    additionalData.quantity,
+    additionalData.categories,
+    additionalData.productName,
+    additionalData.imageUrl,
+    ...Object.values(analysis.Allergens),
+    ...Object.values(analysis.LifestyleChoices),
+    ...Object.values(analysis.ReligiousRestrictions),
+    ...Object.values(analysis.DietChoice),
+    ...Object.values(analysis.SustainabilityChoices),
+    ...Object.values(analysis.Packaging),
+    ...Object.values(analysis.FoodRatings),
+    analysis.CountryOfOrigin
+  ];
+  return flatAnalysis;
 }
 
-let timezone = getTimezone(40.7128, -74.0060)[0];
-console.log(timezone);
+function isEmpty(obj) {
+    return Object.keys(obj).length === 0 && obj.constructor === Object;
+  }
+
+// Call the function to start the process
+fetchAnalysis();
+
+
+
+
+// // Import the geo-tz library
+// const geoTz = require('geo-tz').find;
+
+// // Define a function to get timezone
+// function getTimezone(latitude, longitude) {
+//   // Use the find method from geo-tz to get the timezone
+//   const timezones = geoTz(latitude, longitude)
+//   if (timezones.length === 0) {
+//     return ["unknown"];
+//   }
+//   return timezones;
+// }
+
+// let timezone = getTimezone(40.7128, -74.0060)[0];
+// console.log(timezone);
 
 /*// // Lambda handler
 // exports.handler = async (event) => {
