@@ -19,11 +19,12 @@ async function fetchAnalysis() {
         'PartRecycled', 'ABCDERatings', 'HighSugarSaltSpecificProducts', 'CountryOfOrigin'
     ];
   
-    fs.writeFileSync('analysis.csv', headers.join(',') + '\n');
+    fs.writeFileSync('analysis.csv', headers.map(header => `"${header}"`).join(',') + '\n');
   
     const barcodes = fs.readFileSync('barcodes.txt', 'utf-8').split('\n');
     for (let i = 0; i < barcodes.length; i++) {
       const barcode = barcodes[i].trim();
+      //console.log("BARCODE: " + barcode)
       try {
         let response = await axios.get(baseUrl, {
           params: {
@@ -35,6 +36,7 @@ async function fetchAnalysis() {
         });
         response = response.data;
         console.log(response.data);
+
         if (isEmpty(response.data.nutriments) && isEmpty(response.data.ingredients)) {
           const noProductFound = Array(headers.length).fill('No product found');
           noProductFound[0] = barcode; // Put the barcode in the first column
@@ -44,8 +46,8 @@ async function fetchAnalysis() {
         const additionalData = {
           brands: response.data.brands || response.data.brand || response.data.brand_name,
           quantity: response.data.quantity,
-          categories: response.data.categories || response.data.categorie,
-          productName: response.data.product_name || response.data.food_name,
+          categories: response.data.categories || response.data.categorie || response.data.category,
+          productName: response.data.product_name || response.data.food_name || response.data.title || response.data.label,
           imageUrl: response.data.image_url,
           description: response.data.description
         };
@@ -84,7 +86,7 @@ function flattenAnalysis(analysis, additionalData) {
     ...Object.values(analysis.Packaging),
     ...Object.values(analysis.FoodRatings),
     analysis.CountryOfOrigin
-  ];
+  ].map(field => `"${field}"`); // Wrap each field in quotes;
   return flatAnalysis;
 }
 

@@ -147,6 +147,7 @@ async function fetchDataAndProcess(barcode) {
     let data = {};
     data.nutriments = {};
     data.ingredients = [];
+    data.analysis = {};
 
     // OPEN FOOD FACTS
     try {
@@ -155,11 +156,14 @@ async function fetchDataAndProcess(barcode) {
         {
             extractDataFromApiResponse(response.product, data);
             console.log("OPEN FOOD FACTS SUCCESS")
+            data.apiStatus.openFoodFacts = 'SUCCESS'; // Mark as successful
         }
         else {
+            data.apiStatus.openFoodFacts = 'ERROR: Unexpected Response'; // Mark as error
             console.error('Unexpected API response structure at Open Food Facts:', response);
         }
     } catch(error) {
+        data.apiStatus.openFoodFacts = 'ERROR: Fetch Failed'; // Mark as error
         console.error('Error fetching product at OPEN FOOD FACTS:', error);
     }
 
@@ -170,10 +174,15 @@ async function fetchDataAndProcess(barcode) {
         {
             mergeApiResponseWithExtractedData(upcResponse, data);
             console.log("UPC SUCCESS")
+            data.apiStatus.upc = 'SUCCESS'; // Mark as successful
         }
         else 
+        {
+            data.apiStatus.upc = 'ERROR: Unexpected Response'; // Mark as error
             console.error('Unexpected API response structure at UPC:', upcResponse);
+        }
     } catch(error) {
+        data.apiStatus.upc = 'ERROR: Fetch Failed'; // Mark as error
         console.error('Error fetching product at UPC:', error);
     }
 
@@ -182,9 +191,11 @@ async function fetchDataAndProcess(barcode) {
         const edamamResponse = await getProductByEdamam(barcode);
         if(edamamResponse && edamamResponse.hints[0]) {
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
-            console.log("EDAMAM SUCCESS")
+            console.log("EDAMAM SUCCESS");
+            data.apiStatus.edamam = 'SUCCESS'; // Mark as successful
         } else {
             console.error('Unexpected API response structure at Edamam:', edamamResponse);
+            data.apiStatus.edamam = 'ERROR: Unexpected Response'; // Mark as error
         }
 
         let name = data.knownAs;
@@ -200,12 +211,15 @@ async function fetchDataAndProcess(barcode) {
             if(usdaResponse && usdaResponse.foods[0]) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
                 console.log("USDA SUCCESS")
+                data.apiStatus.usda = 'SUCCESS'; // Mark as successful
             } else {
-                console.error('Unexpected API response structure at USDA:', usdaResponse);
+                data.apiStatus.usda = 'ERROR: No product found'; // Mark as error
+                console.error('No product found at USDA:', usdaResponse);
             }
         }
     } catch(error) {
         console.error('Error fetching product at Edamam or USDA:', error);
+        data.apiStatus.edamam = 'ERROR: Fetch Failed'; // Mark as error
     }
 
     // Nutritionix
@@ -213,12 +227,15 @@ async function fetchDataAndProcess(barcode) {
         const nutritionixResponse = await getProductByNutritionix(barcode);
         if (nutritionixResponse && nutritionixResponse.foods) {
             mergeApiResponseWithNutritionixData(nutritionixResponse, data);
-            console.log("Nutritionix SUCCESS")
+            console.log("Nutritionix SUCCESS");
+            data.apiStatus.nutritionix = 'SUCCESS'; // Mark as successful
         } else {
             console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
+            data.apiStatus.nutritionix = 'ERROR: Unexpected Response'; // Mark as error
         }
     } catch(error) {
         console.error('Error fetching data at Nutritionix:', error);
+        data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
 
     return data;
