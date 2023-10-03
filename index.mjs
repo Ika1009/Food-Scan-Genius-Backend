@@ -356,43 +356,68 @@ async function getProductByUPC(barcode) {
         console.error('Error at UPC:', error.message);
     }
 }
-
 function mergeApiResponseWithExtractedData(apiResponse, data) {
-    // Fields from the UPC API response
-    const upcItemFields = [
-        'ean', 'title', 'upc', 'gtin', 'elid', 'description', 'brand', 'model', 'color', 
-        'size', 'dimension', 'weight', 'category', 'currency', 'lowest_recorded_price', 
-        'highest_recorded_price', 'images', 'offers', 'user_data'
-    ];
+    // Fields from the UPC API response and their mappings to custom variable names
+    const upcItemFieldMapping = {
+        'ean': 'ean',
+        'title': 'product_name',
+        'upc': 'upc',
+        'gtin': 'gtin',
+        'elid': 'elid',
+        'description': 'description',
+        'brand': 'brand',
+        'model': 'model',
+        'color': 'color',
+        'size': 'size',
+        'dimension': 'dimension',
+        'weight': 'weight',
+        'category': 'category',
+        'currency': 'currency',
+        'lowest_recorded_price': 'lowest_recorded_price',
+        'highest_recorded_price': 'highest_recorded_price',
+        'images': 'images',
+        'offers': 'offers',
+        'user_data': 'user_data'
+    };
 
-    const upcOfferFields = [
-        'merchant', 'domain', 'title', 'currency', 'list_price', 'price', 'shipping', 
-        'condition', 'availability', 'link', 'updated_t'
-    ];
+    const upcOfferFieldMapping = {
+        'merchant': 'merchant',
+        'domain': 'domain',
+        'title': 'title',
+        'currency': 'currency',
+        'list_price': 'list_price',
+        'price': 'price',
+        'shipping': 'shipping',
+        'condition': 'condition',
+        'availability': 'availability',
+        'link': 'link',
+        'updated_t': 'updated_t'
+    };
 
     // For simplicity, let's focus on the first item in the API response.
     const item = apiResponse.items[0];
 
     // Merge top-level fields from UPC API response if they're not in data
-    upcItemFields.forEach(field => {
-        if (!data[field] && item[field]) {
-            data[field] = item[field];
+    for (const [originalField, customField] of Object.entries(upcItemFieldMapping)) {
+        if (!data[customField] && item[originalField]) {
+            data[customField] = item[originalField];
         }
-    });
+    }
 
     // Check if the offers field exists in the UPC API response and merge accordingly
     if (item.offers) {
-        data.offers = item.offers.map(offer => {
+        data[upcItemFieldMapping['offers']] = item.offers.map(offer => {
             let offerData = {};
-            upcOfferFields.forEach(field => {
-                if (offer[field]) {
-                    offerData[field] = offer[field];
+            for (const [originalField, customField] of Object.entries(upcOfferFieldMapping)) {
+                if (offer[originalField]) {
+                    offerData[customField] = offer[originalField];
                 }
-            });
+            }
             return offerData;
         });
     }
 }
+
 
 
 //#endregion
@@ -474,17 +499,25 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         }
     }
     
-    // Directly mapped fields
-    const directFields = [
-        'foodId', 'label', 'knownAs', 'brand', 'category', 
-        'categoryLabel', 'foodContentsLabel', 'image', 'servingsPerContainer'
-    ];
+    // Directly mapped fields with their custom names
+    const directFieldMapping = {
+        'foodId': 'foodId',
+        'label': 'product_name',
+        'knownAs': 'knownAs',
+        'brand': 'brand',
+        'category': 'category',
+        'categoryLabel': 'categoryLabel',
+        'foodContentsLabel': 'foodContentsLabel',
+        'image': 'image',
+        'servingsPerContainer': 'servingsPerContainer'
+    };
 
-    directFields.forEach(field => {
-        if (!data[field] && item[field]) {
-            data[field] = item[field];
+    for (const [originalField, customField] of Object.entries(directFieldMapping)) {
+        if (!data[customField] && item[originalField]) {
+            data[customField] = item[originalField];
         }
-    });
+    }
+
 
     // Handling servingSizes
     // if (!data.servingSizes && item.servingSizes) {
@@ -645,26 +678,29 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         }
     }
 
-    // Directly mapped fields
-    const directFields = {
-        'food_name': 'food_name',
-        'brand_name': 'brand_name',
-        'serving_qty': 'serving_qty',
-        'serving_unit': 'serving_unit',
-        'serving_weight_grams': 'serving_weight_grams',
-        'nix_brand_name': 'nix_brand_name',
-        'nix_brand_id': 'nix_brand_id',
-        'nix_item_name': 'nix_item_name',
-        'nix_item_id': 'nix_item_id',
-        'thumb': 'photo.thumb'
-        // ... Add other fields as needed
+    // Directly mapped fields with their custom names
+    const directFieldMapping = {
+        'fdcid': 'customFdcid',
+        'gtinUpc': 'customGtinUpc',
+        'dataType': 'customDataType',
+        'foodClass': 'customFoodClass',
+        'brandOwner': 'customBrandOwner',
+        'dataSource': 'customDataSource',
+        'description': 'customDescription',
+        'ingredients': 'customIngredients',
+        'servingSize': 'customServingSize',
+        'servingSizeUnit': 'customServingSizeUnit',
+        'discontinuedDate': 'customDiscontinuedDate',
+        'brandedFoodCategory': 'customBrandedFoodCategory',
+        'householdServingFullText': 'customHouseholdServingFullText'
     };
 
-    for (let [dataKey, nutritionixKey] of Object.entries(directFields)) {
-        if (!data[dataKey] && item[nutritionixKey]) {
-            data[dataKey] = item[nutritionixKey];
+    for (const [originalField, customField] of Object.entries(directFieldMapping)) {
+        if (!data[customField] && item[originalField]) {
+            data[customField] = item[originalField];
         }
     }
+
 
 }
 
