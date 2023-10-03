@@ -28,15 +28,17 @@ export const handler = async (event) => {
             };
         }
 
+        const timestamp = Date.now().toString();
         let timezone = getTimezone(latitude, longitude)[0];
         // Call the new function to upload data to the new table.
-        await uploadToLogsTable(barcode, latitude, longitude, userId, timezone);
+        await uploadToLogsTable(barcode, latitude, longitude, userId, timezone, timestamp);
 
         let response = await getFromDynamoDB(barcode);
         if (!response) {
             console.log("Doesn't exist in the dynamodb, uploading: ", response);
             const data = await fetchDataAndProcess(barcode);
             const analysis = processApiResponseToLabels(data);
+            analysis.TimeStamp = timestamp;
             response = JSON.stringify({
                 data: data,
                 analysis: analysis
@@ -114,13 +116,12 @@ async function uploadToDynamoDB(barcode, response) {
     }
 }
 
-async function uploadToLogsTable(barcode, latitude, longitude, userId, timezone) {
+async function uploadToLogsTable(barcode, latitude, longitude, userId, timezone, timestamp) {
     if (!barcode || !latitude || !longitude || !userId || !timezone) {
         throw new Error("All parameters are required.");
     }
 
     // Getting the current timestamp.
-    const timestamp = Date.now().toString();
 
     const params = {
         TableName: "logs", // Change this to your new table name
@@ -708,7 +709,6 @@ function processApiResponseToLabels(productData) {
     const result = {
         BarCodeNum: productData.code || productData.ean,
         TimeStamp: productData.last_modified_t,
-        ErrorCode: "No",
         Allergens: {
             celery: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['celery']),
             cereals_containing_gluten: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['cereals-containing-gluten', 'wheat', 'rye', 'barley', 'oats']),
