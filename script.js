@@ -41,14 +41,14 @@ async function fetchAnalysis() {
           fs.appendFileSync('analysis.csv', noProductFound.join(',') + '\n');
         } else {
           const analysis = response.analysis;
-          const additionalData = {
-            brands: response.data.brand,
-            quantity: response.data.quantity,
-            categories: response.data.categories,
-            productName: response.data.product_name,
-            imageUrl: response.data.image_url,
-            imageUrl: response.data.description
-          };
+        const additionalData = {
+          brands: response.data.brands || response.data.brand || response.data.brand_name,
+          quantity: response.data.quantity,
+          categories: response.data.categories || response.data.categorie,
+          productName: response.data.product_name || response.data.food_name,
+          imageUrl: response.data.image_url,
+          description: response.data.description
+        };
   
           const flattenedAnalysis = flattenAnalysis(analysis, additionalData);
           fs.appendFileSync('analysis.csv', flattenedAnalysis.join(',') + '\n');
