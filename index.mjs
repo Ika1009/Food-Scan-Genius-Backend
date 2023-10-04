@@ -359,26 +359,27 @@ async function getProductByUPC(barcode) {
 function mergeApiResponseWithExtractedData(apiResponse, data) {
     // Fields from the UPC API response and their mappings to custom variable names
     const upcItemFieldMapping = {
-        'ean': 'ean',
+        'ean': 'ean',  // Not found in topLevelFields
         'title': 'product_name',
-        'upc': 'upc',
-        'gtin': 'gtin',
-        'elid': 'elid',
-        'description': 'description',
+        'upc': 'upc',  // Not found in topLevelFields
+        'gtin': 'gtin',  // Not found in topLevelFields
+        'elid': 'elid',  // Not found in topLevelFields
+        'description': 'description',  // Not found in topLevelFields
         'brand': 'brands',
-        'model': 'model',
-        'color': 'color',
-        'size': 'size',
-        'dimension': 'dimension',
-        'weight': 'weight',
+        'model': 'model',  // Not found in topLevelFields
+        'color': 'color',  // Not found in topLevelFields
+        'size': 'serving_size',
+        'dimension': 'dimension',  // Not found in topLevelFields
+        'weight': 'quantity',
         'category': 'categories',
-        'currency': 'currency',
-        'lowest_recorded_price': 'lowest_recorded_price',
-        'highest_recorded_price': 'highest_recorded_price',
+        'currency': 'currency',  // Not found in topLevelFields
+        'lowest_recorded_price': 'lowest_recorded_price',  // Not found in topLevelFields
+        'highest_recorded_price': 'highest_recorded_price',  // Not found in topLevelFields
         'images': 'images',
-        'offers': 'offers',
-        'user_data': 'user_data'
+        'offers': 'offers',  // Not found in topLevelFields
+        'user_data': 'user_data'  // Not found in topLevelFields
     };
+
 
     const upcOfferFieldMapping = {
         'merchant': 'merchant',
@@ -499,18 +500,18 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         }
     }
     
-    // Directly mapped fields with their custom names
     const directFieldMapping = {
-        'foodId': 'foodId',
+        'foodId': 'foodId',  // Not found in topLevelFields
         'label': 'product_name',
-        'knownAs': 'knownAs',
+        'knownAs': 'knownAs',  // Not found in topLevelFields
         'brand': 'brands',
         'category': 'categories',
-        'categoryLabel': 'categoryLabel',
+        'categoryLabel': 'categoryLabel',  // Not found in topLevelFields
         'foodContentsLabel': 'foodContentsLabel',
-        'image': 'image',
+        'image': 'image_url',
         'servingsPerContainer': 'servingsPerContainer'
     };
+
 
     for (const [originalField, customField] of Object.entries(directFieldMapping)) {
         if (!data[customField] && item[originalField]) {
@@ -596,19 +597,29 @@ function mergeApiResponseWithUSDAData(apiResponse, data) {
         }
     }
     
-    // Directly mapped fields
-    const directFields = [
-        'fdcid', 'gtinUpc', 'dataType', 'foodClass', 'brandOwner', 
-        'dataSource', 'description', 'ingredients', 'servingSize', 
-        'servingSizeUnit', 'discontinuedDate', 'brandedFoodCategory', 
-        'householdServingFullText'
-    ];
+const directFieldsMapping = {
+    'fdcid': 'id',  // Assuming 'fdcid' is the unique identifier like 'id'
+    'gtinUpc': 'gtinUpc',  // Not found in topLevelFields
+    'dataType': 'dataType',  // Not found in topLevelFields
+    'foodClass': 'foodClass',  // Not found in topLevelFields
+    'brandOwner': 'brands',  // Assuming 'brandOwner' refers to 'brands'
+    'dataSource': 'dataSource',  // Not found in topLevelFields
+    'description': 'generic_name',  // Assuming 'description' might be like 'generic_name'
+    'ingredients': 'ingredients',
+    'servingSize': 'serving_size',
+    'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
+    'discontinuedDate': 'expiration_date',  // Assuming 'discontinuedDate' is like 'expiration_date'
+    'brandedFoodCategory': 'categories',
+    'householdServingFullText': 'serving_quantity'  // Assuming this refers to the serving quantity
+};
 
     directFields.forEach(field => {
-        if (!data[field] && item[field]) {
-            data[field] = item[field];
+        const mappedField = directFieldsMapping[field]; // Get the mapped field name
+        if (mappedField && !data[mappedField] && item[field]) {
+            data[mappedField] = item[field];
         }
     });
+
 }
 
 
