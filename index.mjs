@@ -723,36 +723,44 @@ function processApiResponseToLabels(productData) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
-
+    // General utility functions
     const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
     const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
     const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
-    const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
 
-    const hasBeef = containsIngredient(productData.ingredients, 'beef');
-    const hasPork = containsIngredient(productData.ingredients, 'pork');
-    const hasChicken = containsIngredient(productData.ingredients, 'chicken');
-    const hasMilk = containsIngredient(productData.ingredients, 'milk');
-    const hasEgg = containsIngredient(productData.ingredients, 'egg');
-    const hasOnion = containsIngredient(productData.ingredients, 'onion');
-    const hasGarlic = containsIngredient(productData.ingredients, 'garlic');
-    const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
-    const hasMeat = hasBeef || hasPork || hasChicken;
-    const hasFish = containsIngredient(productData.ingredients, 'fish');
-    const hasRedMeat = hasBeef || hasPork;
-    
-    // Define a function to check for multiple keywords
+    // Ingredient configurations
+    const ingredientsConfig = {
+        beef: 'beef',
+        pork: 'pork',
+        chicken: 'chicken',
+        milk: 'milk',
+        egg: 'egg',
+        onion: 'onion',
+        garlic: 'garlic',
+        fish: 'fish',
+    };
+
+    // Compute ingredient presence using config
+    const ingredientPresence = {};
+    Object.keys(ingredientsConfig).forEach(key => {
+        ingredientPresence[key] = containsIngredient(productData.ingredients, ingredientsConfig[key]);
+    });
+
+    // Derived ingredient categories
+    const hasAnimalProducts = ['beef', 'pork', 'chicken', 'milk', 'egg'].some(key => ingredientPresence[key]);
+    const hasMeat = ['beef', 'pork', 'chicken'].some(key => ingredientPresence[key]);
+    const hasRedMeat = ['beef', 'pork'].some(key => ingredientPresence[key]);
+
+    // Generalized function to check for multiple keywords
     const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
         const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
         const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
         const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
-
         if (checkTag) return 'Yes';
         if (checkIngredient) return 'Yes';
         if (checkTrace) return 'Traces';
         return 'No';
     };
-
     const result = {
         BarCodeNum: productData.code || productData.ean,
         TimeStamp: productData.last_modified_t,
