@@ -365,7 +365,7 @@ function mergeApiResponseWithExtractedData(apiResponse, data) {
         'gtin': 'gtin',
         'elid': 'elid',
         'description': 'description',
-        'brand': 'brand',
+        'brand': 'brands',
         'model': 'model',
         'color': 'color',
         'size': 'size',
@@ -504,7 +504,7 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         'foodId': 'foodId',
         'label': 'product_name',
         'knownAs': 'knownAs',
-        'brand': 'brand',
+        'brand': 'brands',
         'category': 'category',
         'categoryLabel': 'categoryLabel',
         'foodContentsLabel': 'foodContentsLabel',
@@ -680,19 +680,19 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
 
     // Directly mapped fields with their custom names
     const directFieldMapping = {
-        'fdcid': 'customFdcid',
-        'gtinUpc': 'customGtinUpc',
-        'dataType': 'customDataType',
-        'foodClass': 'customFoodClass',
-        'brandOwner': 'customBrandOwner',
-        'dataSource': 'customDataSource',
-        'description': 'customDescription',
-        'ingredients': 'customIngredients',
-        'servingSize': 'customServingSize',
-        'servingSizeUnit': 'customServingSizeUnit',
-        'discontinuedDate': 'customDiscontinuedDate',
-        'brandedFoodCategory': 'customBrandedFoodCategory',
-        'householdServingFullText': 'customHouseholdServingFullText'
+        'fdcid': 'fdcid',
+        'gtinUpc': 'gtinUpc',
+        'dataType': 'dataType',
+        'foodClass': 'foodClass',
+        'brandOwner': 'brandOwner',
+        'dataSource': 'dataSource',
+        'description': 'description',
+        'ingredients': 'ingredients',
+        'servingSize': 'servingSize',
+        'servingSizeUnit': 'servingSizeUnit',
+        'discontinuedDate': 'discontinuedDate',
+        'brandedFoodCategory': 'brandedFoodCategory',
+        'householdServingFullText': 'householdServingFullText'
     };
 
     for (const [originalField, customField] of Object.entries(directFieldMapping)) {
