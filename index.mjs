@@ -149,6 +149,7 @@ async function fetchDataAndProcess(barcode) {
     data.nutriments = {};
     data.ingredients = [];
     data.analysis = {};
+    data.apiStatus = {};
 
     // OPEN FOOD FACTS
     try {
@@ -199,13 +200,15 @@ async function fetchDataAndProcess(barcode) {
             data.apiStatus.edamam = 'ERROR: Unexpected Response'; // Mark as error
         }
 
-        let name = data.knownAs;
-        if (!name || name.trim() === "") {
-            name = data.label;
-        }
-        if (!name || name.trim() === "") {
-            name = data.product_name;
-        }
+    } catch(error) {
+        console.error('Error fetching product at Edamam:', error);
+        data.apiStatus.edamam = 'ERROR: No product found'; // Mark as error
+    }
+
+    //USDA
+    try
+    {
+        let name = data.product_name;
 
         if(name && name.trim() !== "") {
             const usdaResponse = await USDA_searchFoodByName(name);
@@ -219,8 +222,8 @@ async function fetchDataAndProcess(barcode) {
             }
         }
     } catch(error) {
-        console.error('Error fetching product at Edamam or USDA:', error);
-        data.apiStatus.edamam = 'ERROR: Fetch Failed'; // Mark as error
+        console.error('Error fetching product at USDA:', error);
+        data.apiStatus.upc = 'ERROR: No product found'; // Mark as error
     }
 
     // Nutritionix
@@ -719,48 +722,41 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
 //#endregion
 
 
+
 function processApiResponseToLabels(productData) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
-    // General utility functions
+
     const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
     const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
     const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
+    const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
 
-    // Ingredient configurations
-    const ingredientsConfig = {
-        beef: 'beef',
-        pork: 'pork',
-        chicken: 'chicken',
-        milk: 'milk',
-        egg: 'egg',
-        onion: 'onion',
-        garlic: 'garlic',
-        fish: 'fish',
-    };
-
-    // Compute ingredient presence using config
-    const ingredientPresence = {};
-    Object.keys(ingredientsConfig).forEach(key => {
-        ingredientPresence[key] = containsIngredient(productData.ingredients, ingredientsConfig[key]);
-    });
-
-    // Derived ingredient categories
-    const hasAnimalProducts = ['beef', 'pork', 'chicken', 'milk', 'egg'].some(key => ingredientPresence[key]);
-    const hasMeat = ['beef', 'pork', 'chicken'].some(key => ingredientPresence[key]);
-    const hasRedMeat = ['beef', 'pork'].some(key => ingredientPresence[key]);
-
-    // Generalized function to check for multiple keywords
+    const hasBeef = containsIngredient(productData.ingredients, 'beef');
+    const hasPork = containsIngredient(productData.ingredients, 'pork');
+    const hasChicken = containsIngredient(productData.ingredients, 'chicken');
+    const hasMilk = containsIngredient(productData.ingredients, 'milk');
+    const hasEgg = containsIngredient(productData.ingredients, 'egg');
+    const hasOnion = containsIngredient(productData.ingredients, 'onion');
+    const hasGarlic = containsIngredient(productData.ingredients, 'garlic');
+    const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
+    const hasMeat = hasBeef || hasPork || hasChicken;
+    const hasFish = containsIngredient(productData.ingredients, 'fish');
+    const hasRedMeat = hasBeef || hasPork;
+    
+    // Define a function to check for multiple keywords
     const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
         const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
         const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
         const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
+
         if (checkTag) return 'Yes';
         if (checkIngredient) return 'Yes';
         if (checkTrace) return 'Traces';
         return 'No';
     };
+
     const result = {
         BarCodeNum: productData.code || productData.ean,
         TimeStamp: productData.last_modified_t,
