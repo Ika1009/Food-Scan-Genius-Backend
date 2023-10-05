@@ -24,7 +24,7 @@ async function fetchAnalysis() {
     const barcodes = fs.readFileSync('barcodes.txt', 'utf-8').split('\n');
     for (let i = 0; i < barcodes.length; i++) {
       const barcode = barcodes[i].trim();
-      //console.log("BARCODE: " + barcode)
+      console.log("barcode: " + barcode)
       try {
         let response = await axios.get(baseUrl, {
           params: {
@@ -35,7 +35,7 @@ async function fetchAnalysis() {
           }
         });
         response = response.data;
-        console.log(response.data);
+        //console.log(response.data);
 
         if (isEmpty(response.data.nutriments) && isEmpty(response.data.ingredients)) {
           const noProductFound = Array(headers.length).fill('No product found');
@@ -63,6 +63,9 @@ async function fetchAnalysis() {
   
       } catch (error) {
         console.error(`Error fetching data for barcode ${barcode}: `, error);
+
+        // Append to log.txt file
+        fs.appendFileSync('log.txt', `Error fetching data for barcode ${barcode}: ${error}\n`);
       }
     }
   }
@@ -72,7 +75,7 @@ function flattenAnalysis(analysis, additionalData) {
   const flatAnalysis = [
     analysis.BarCodeNum,
     analysis.TimeStamp,
-    analysis.ErrorCode,
+    additionalData.apiStatus,
     additionalData.brands,
     additionalData.quantity,
     additionalData.categories,

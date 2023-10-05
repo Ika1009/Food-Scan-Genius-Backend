@@ -3,12 +3,23 @@ import AWS from 'aws-sdk';
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-function isValidBarcode(barcode) {
-    const regex = /^\d+$/;
-    return regex.test(barcode);
-}
-
 export const handler = async (event) => {
+    function isProductNotFound(data) {
+        // Check if the only properties in data are nutriments, ingredients, analysis, and apiStatus
+        const keys = Object.keys(data);
+        if (keys.length !== 4) return false;
+    
+        // Check if nutriments, ingredients, and analysis are empty
+        if (Object.keys(data.nutriments).length !== 0) return false;
+        if (data.ingredients.length !== 0) return false;
+    
+        // If we reach here, it means data meets the criteria for "No product found"
+        return true;
+    }
+    function isValidBarcode(barcode) {
+        const regex = /^\d+$/;
+        return regex.test(barcode);
+    }
     try {          
         if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
             return {
@@ -37,8 +48,19 @@ export const handler = async (event) => {
         if (!response) {
             console.log("Doesn't exist in the dynamodb, uploading: ", response);
             const data = await fetchDataAndProcess(barcode);
+            // Check if data meets "No product found" criteria
+            if (isProductNotFound(data)) {
+                response = JSON.stringify({
+                    data: {
+                        message: "No product found"
+                    }
+                });
+                await uploadToDynamoDB(barcode, response);
+                return;  // End execution if no product was found
+            }
             const analysis = processApiResponseToLabels(data);
             analysis.TimeStamp = timestamp;
+            analysis.BarCodeNum = barcode
             response = JSON.stringify({
                 data: data,
                 analysis: analysis
@@ -148,7 +170,6 @@ async function fetchDataAndProcess(barcode) {
     let data = {};
     data.nutriments = {};
     data.ingredients = [];
-    data.analysis = {};
     data.apiStatus = {};
 
     // OPEN FOOD FACTS
@@ -210,7 +231,7 @@ async function fetchDataAndProcess(barcode) {
     {
         let name = data.product_name;
 
-        if(name && name.trim() !== "") {
+        if(name) {
             const usdaResponse = await USDA_searchFoodByName(name);
             if(usdaResponse && usdaResponse.foods[0]) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
@@ -223,7 +244,7 @@ async function fetchDataAndProcess(barcode) {
         }
     } catch(error) {
         console.error('Error fetching product at USDA:', error);
-        data.apiStatus.upc = 'ERROR: No product found'; // Mark as error
+        data.apiStatus.usda = 'ERROR: No product found'; // Mark as error
     }
 
     // Nutritionix
