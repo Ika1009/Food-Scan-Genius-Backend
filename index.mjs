@@ -7,7 +7,7 @@ export const handler = async (event) => {
     function isProductNotFound(data) {
         // Check if the only properties in data are nutriments, ingredients, analysis, and apiStatus
         const keys = Object.keys(data);
-        if (keys.length !== 4) return false;
+        if (keys.length !== 3) return false;
     
         // Check if nutriments, ingredients, and analysis are empty
         if (Object.keys(data.nutriments).length !== 0) return false;
