@@ -182,7 +182,7 @@ async function fetchDataAndProcess(barcode) {
             data.apiStatus.openFoodFacts = 'SUCCESS'; // Mark as successful
         }
         else {
-            data.apiStatus.openFoodFacts = 'ERROR: Unexpected Response'; // Mark as error
+            data.apiStatus.openFoodFacts = 'ERROR: No product found'; // Mark as error
             console.error('Unexpected API response structure at Open Food Facts:', response);
         }
     } catch(error) {
@@ -201,7 +201,7 @@ async function fetchDataAndProcess(barcode) {
         }
         else 
         {
-            data.apiStatus.upc = 'ERROR: Unexpected Response'; // Mark as error
+            data.apiStatus.upc = 'ERROR:  No product found'; // Mark as error
             console.error('Unexpected API response structure at UPC:', upcResponse);
         }
     } catch(error) {
@@ -218,12 +218,12 @@ async function fetchDataAndProcess(barcode) {
             data.apiStatus.edamam = 'SUCCESS'; // Mark as successful
         } else {
             console.error('Unexpected API response structure at Edamam:', edamamResponse);
-            data.apiStatus.edamam = 'ERROR: Unexpected Response'; // Mark as error
+            data.apiStatus.edamam = 'ERROR:  No product found'; // Mark as error
         }
 
     } catch(error) {
         console.error('Error fetching product at Edamam:', error);
-        data.apiStatus.edamam = 'ERROR: No product found'; // Mark as error
+        data.apiStatus.edamam = 'ERROR: Fetch Failed'; // Mark as error
     }
 
     //USDA
@@ -244,7 +244,7 @@ async function fetchDataAndProcess(barcode) {
         }
     } catch(error) {
         console.error('Error fetching product at USDA:', error);
-        data.apiStatus.usda = 'ERROR: No product found'; // Mark as error
+        data.apiStatus.usda = 'ERROR: Fetch failed'; // Mark as error
     }
 
     // Nutritionix
@@ -256,7 +256,7 @@ async function fetchDataAndProcess(barcode) {
             data.apiStatus.nutritionix = 'SUCCESS'; // Mark as successful
         } else {
             console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
-            data.apiStatus.nutritionix = 'ERROR: Unexpected Response'; // Mark as error
+            data.apiStatus.nutritionix = 'ERROR: No product found'; // Mark as error
         }
     } catch(error) {
         console.error('Error fetching data at Nutritionix:', error);

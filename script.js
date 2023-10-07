@@ -8,7 +8,7 @@ async function fetchAnalysis() {
     const baseUrl = 'https://api.scangeni.us/';
   
     const headers = [
-        'BarCodeNum', 'TimeStamp', 'ErrorCode',
+        'BarCodeNum', 'TimeStamp', 'OFF STATUS', 'UPC STATUS', 'EDAMAM STATUS', 'USDA STATUS', 'NUTRITIONIX STATUS',
         'Brands', 'Quantity', 'Categories', 'ProductName', 'ImageUrl',
         'celery', 'cereals_containing_gluten', 'crustaceans', 'eggs', 'fish',
         'lupin', 'milk', 'molluscs', 'mustard', 'nuts', 'peanuts', 'sesame_seeds',
@@ -37,7 +37,7 @@ async function fetchAnalysis() {
         response = response.data;
         //console.log(response.data);
 
-        if (isEmpty(response.data.nutriments) && isEmpty(response.data.ingredients)) {
+        if (response.data.message) {
           const noProductFound = Array(headers.length).fill('No product found');
           noProductFound[0] = barcode; // Put the barcode in the first column
           fs.appendFileSync('analysis.csv', noProductFound.join(',') + '\n');
@@ -49,7 +49,8 @@ async function fetchAnalysis() {
           categories: response.data.categories || response.data.categorie || response.data.category,
           productName: response.data.product_name || response.data.food_name || response.data.title || response.data.label,
           imageUrl: response.data.image_url,
-          description: response.data.description
+          description: response.data.description,
+          apiStatus: response.data.apiStatus
         };
   
           const flattenedAnalysis = flattenAnalysis(analysis, additionalData);
@@ -75,7 +76,7 @@ function flattenAnalysis(analysis, additionalData) {
   const flatAnalysis = [
     analysis.BarCodeNum,
     analysis.TimeStamp,
-    additionalData.apiStatus,
+    ...Object.values(additionalData.apiStatus),
     additionalData.brands,
     additionalData.quantity,
     additionalData.categories,
