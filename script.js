@@ -107,10 +107,37 @@ function isEmpty(obj) {
 }
 
 // Call the function to start the process
-fetchAnalysis();
+//fetchAnalysis();
 
 
+const NUTRITIONIX_APP_ID = '918f9c08';
+const NUTRITIONIX_API_KEY = '3b8384ce0ff9e531b1d812f72c675b6c';  // You provided two API keys; I'm using the first one here
 
+async function getProductByNutritionix(barcode) {
+    const BASE_URL = 'https://trackapi.nutritionix.com/v2/search/item';
+    try {
+        const response = await axios.get(BASE_URL, {
+            headers: {
+                'x-app-id': NUTRITIONIX_APP_ID,
+                'x-app-key': NUTRITIONIX_API_KEY
+            },
+            params: {
+                upc: barcode
+            },
+            timeout: 3000
+        });
+
+        if (response.status === 200 && response.data && Array.isArray(response.data.foods)) {
+            console.log(response.data);
+        } else {
+            console.error('Error fetching data from Nutritionix or unexpected structure:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('Error at Nutritionix:', error.message);
+    }
+}
+
+getProductByNutritionix(5000159461122);
 
 // // Import the geo-tz library
 // const geoTz = require('geo-tz').find;

@@ -58,7 +58,7 @@ export const handler = async (event) => {
                 await uploadToDynamoDB(barcode, response);
                 return;  // End execution if no product was found
             }
-            const analysis = processApiResponseToLabels(data);
+            const analysis = processApiResponseToLabels(data, data.apiStatus);
             analysis.TimeStamp = timestamp;
             analysis.BarCodeNum = barcode
             response = JSON.stringify({
@@ -531,7 +531,7 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         'brand': 'brands',
         'category': 'categories',
         'categoryLabel': 'categoryLabel',  // Not found in topLevelFields
-        'foodContentsLabel': 'foodContentsLabel',
+        'foodContentsLabel': 'ingredients_text',
         'image': 'image_url',
         'servingsPerContainer': 'servingsPerContainer'
     };
@@ -628,7 +628,7 @@ const directFieldsMapping = {
     'foodClass': 'foodClass',  // Not found in topLevelFields
     'brandOwner': 'brands',  // Assuming 'brandOwner' refers to 'brands'
     'dataSource': 'dataSource',  // Not found in topLevelFields
-    'description': 'generic_name',  // Assuming 'description' might be like 'generic_name'
+    'description': 'description',  // Assuming 'description' might be like 'generic_name'
     'ingredients': 'ingredients',
     'servingSize': 'serving_size',
     'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
@@ -713,21 +713,29 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         }
     }
 
-    // Directly mapped fields with their custom names
     const directFieldMapping = {
-        'fdcid': 'fdcid',
-        'gtinUpc': 'gtinUpc',
-        'dataType': 'dataType',
-        'foodClass': 'foodClass',
-        'brandOwner': 'brandOwner',
-        'dataSource': 'dataSource',
-        'description': 'description',
-        'ingredients': 'ingredients',
-        'servingSize': 'servingSize',
-        'servingSizeUnit': 'servingSizeUnit',
-        'discontinuedDate': 'discontinuedDate',
-        'brandedFoodCategory': 'brandedFoodCategory',
-        'householdServingFullText': 'householdServingFullText'
+        'food_name': 'product_name',
+        'brand_name': 'brands',
+        'serving_unit': 'servingSizeUnit',
+        'serving_weight_grams': 'serving_size',
+        'nf_metric_qty': 'metricQuantity',
+        'nf_metric_uom': 'metricUnit',
+        'nix_item_name': 'nixItemName',
+        'nix_item_id': 'nixItemId',
+        'metadata': 'metadata',
+        'source': 'source',
+        'ndb_no': 'ndbNumber',
+        'tags': 'tags',
+        'alt_measures': 'alternativeMeasures',
+        'lat': 'latitude',
+        'lng': 'longitude',
+        'photo': 'photo',
+        'note': 'note',
+        'class_code': 'classCode',
+        'brick_code': 'brickCode',
+        'tag_id': 'tagId',
+        'updated_at': 'updatedAt',
+        'nf_ingredient_statement': 'ingredients_text'
     };
 
     for (const [originalField, customField] of Object.entries(directFieldMapping)) {
@@ -744,14 +752,31 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
 
 
 
-function processApiResponseToLabels(productData) {
+function processApiResponseToLabels(productData, apiStatus) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
 
+    // Determine the source of ingredients based on API status
+    let ingredientsSource;
+    if (apiStatus.openFoodFacts === "SUCCESS") {
+        ingredientsSource = productData.ingredients;
+    } else if (apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") {
+        ingredientsSource = productData.ingredients_text;
+    }
+
+    const containsIngredient = (ingredients, keyword) => {
+        if (Array.isArray(ingredients)) {
+            // If ingredients is an array of objects
+            return ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
+        } else if (typeof ingredients === 'string') {
+            // If ingredients is a string
+            return ingredients.toLowerCase().includes(keyword);
+        }
+        return false;
+    };
     const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
     const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
-    const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
     const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
 
     const hasBeef = containsIngredient(productData.ingredients, 'beef');
