@@ -1,177 +1,12 @@
-import axios from 'axios';
-import AWS from 'aws-sdk';
-
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
-
-export const handler = async (event) => {
-    function isProductNotFound(data) {
-        // Check if the only properties in data are nutriments, ingredients, analysis, and apiStatus
-        const keys = Object.keys(data);
-        if (keys.length !== 3) return false;
-    
-        // Check if nutriments, ingredients, and analysis are empty
-        if (Object.keys(data.nutriments).length !== 0) return false;
-        if (data.ingredients.length !== 0) return false;
-    
-        // If we reach here, it means data meets the criteria for "No product found"
-        return true;
-    }
-    function isValidBarcode(barcode) {
-        const regex = /^\d+$/;
-        return regex.test(barcode);
-    }
-    try {          
-        if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'Barcode parameter is missing.' }),
-            };
-        }
-
-        const { barcode, latitude, longitude, userId } = event.queryStringParameters;
-        console.log(`Parameters received - barcode: ${barcode}, latitude: ${latitude}, longitude: ${longitude}, userId: ${userId}`); // Log statement 3
-
-        if (!barcode || !latitude || !longitude || !userId || !isValidBarcode(barcode)) {
-            console.log("One or more required parameters are missing."); // Log statement 4
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'Missing required parameters or invalid format.' }),
-            };
-        }
-
-        const timestamp = Date.now().toString();
-        let timezone = getTimezone(latitude, longitude)[0];
-        // Call the new function to upload data to the new table.
-        await uploadToLogsTable(barcode, latitude, longitude, userId, timezone, timestamp);
-
-        let response = await getFromDynamoDB(barcode);
-        if (!response) {
-            console.log("Doesn't exist in the dynamodb, uploading: ", response);
-            const data = await fetchDataAndProcess(barcode);
-            // Check if data meets "No product found" criteria
-            if (isProductNotFound(data)) {
-                response = JSON.stringify({
-                    data: {
-                        message: "No product found"
-                    }
-                });
-                await uploadToDynamoDB(barcode, response);
-                return;  // End execution if no product was found
-            }
-            const analysis = processApiResponseToLabels(data, data.apiStatus);
-            analysis.TimeStamp = timestamp;
-            analysis.BarCodeNum = barcode
-            response = JSON.stringify({
-                data: data,
-                analysis: analysis
-            });
-            await uploadToDynamoDB(barcode, response);
-        }
-        else
-            console.log("Already exists in the database");
-
-        return {
-            statusCode: 200,
-            body: response
-        };
-    } 
-    catch (error) {
-        console.error("Handler error:", error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: "Handler error: " + error}),
-        };
-    }
-    
-};
-
-// Import the geo-tz library
-import { find as geoTz } from 'geo-tz';
-
-// Define a function to get timezone
-function getTimezone(latitude, longitude) {
-  // Use the find method from geo-tz to get the timezone
-  const timezones = geoTz(latitude, longitude)
-  if (timezones.length === 0) {
-    return ["unknown"];
-  }
-  return timezones;
-}
-
-async function getFromDynamoDB(barcode) {
-    const params = {
-        TableName: "fsg",
-        Key: {
-            barcode: barcode
-        }
-    };
-
-    try {
-        const result = await dynamoDb.get(params).promise();
-        return result.Item ? result.Item.response : null;
-    } catch (error) {
-        console.error("Error fetching data from DynamoDB", error);
-        throw error;
-    }
-}
-
-
-async function uploadToDynamoDB(barcode, response) {
-    if (!barcode) {
-        throw new Error("A valid barcode is required.");
-    }
-
-    const params = {
-        TableName: "fsg",
-        Item: {
-            barcode: barcode, // Unique primary key
-            response: response
-        }
-    };
-
-    try {
-        await dynamoDb.put(params).promise();
-        console.log(`Data for barcode ${barcode} has been saved to DynamoDB.`);
-    } catch (error) {
-        console.error("Error saving data to DynamoDB", error);
-        throw error;
-    }
-}
-
-async function uploadToLogsTable(barcode, latitude, longitude, userId, timezone, timestamp) {
-    if (!barcode || !latitude || !longitude || !userId || !timezone) {
-        throw new Error("All parameters are required.");
-    }
-
-    // Getting the current timestamp.
-
-    const params = {
-        TableName: "logs", // Change this to your new table name
-        Item: {
-            userId: userId,
-            timestamp: timestamp,
-            barcode: barcode,
-            latitude: latitude,
-            longitude: longitude,
-            timezone: timezone
-        }
-    };
-
-    try {
-        await dynamoDb.put(params).promise();
-        console.log(`Data for barcode ${barcode} has been saved to the new table.`);
-    } catch (error) {
-        console.error("Error saving data to the new DynamoDB table", error);
-        throw error;
-    }
-}
+const fs = require('fs');
+const axios = require('axios');
 
 async function fetchDataAndProcess(barcode) {
     let data = {};
     data.nutriments = {};
     data.ingredients = [];
     data.apiStatus = {};
-
+    data.responses = {};
     // OPEN FOOD FACTS
     try {
         const response = await getProductByBarcode(barcode);
@@ -180,6 +15,7 @@ async function fetchDataAndProcess(barcode) {
             extractDataFromApiResponse(response.product, data);
             console.log("OPEN FOOD FACTS SUCCESS")
             data.apiStatus.openFoodFacts = 'SUCCESS'; // Mark as successful
+            data.responses.openFoodFacts = response.product;
         }
         else {
             data.apiStatus.openFoodFacts = 'ERROR: No product found'; // Mark as error
@@ -198,6 +34,7 @@ async function fetchDataAndProcess(barcode) {
             mergeApiResponseWithExtractedData(upcResponse, data);
             console.log("UPC SUCCESS")
             data.apiStatus.upc = 'SUCCESS'; // Mark as successful
+            data.responses.upc = upcResponse;
         }
         else 
         {
@@ -216,6 +53,7 @@ async function fetchDataAndProcess(barcode) {
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
             console.log("EDAMAM SUCCESS");
             data.apiStatus.edamam = 'SUCCESS'; // Mark as successful
+            data.responses.edamamResponse = edamamResponse.hints[0];
         } else {
             console.error('Unexpected API response structure at Edamam:', edamamResponse);
             data.apiStatus.edamam = 'ERROR:  No product found'; // Mark as error
@@ -237,6 +75,7 @@ async function fetchDataAndProcess(barcode) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
                 console.log("USDA SUCCESS")
                 data.apiStatus.usda = 'SUCCESS'; // Mark as successful
+                data.responses.usda = usdaResponse.foods[0];
             } else {
                 data.apiStatus.usda = 'ERROR: No product found'; // Mark as error
                 console.error('No product found at USDA:', usdaResponse);
@@ -258,6 +97,7 @@ async function fetchDataAndProcess(barcode) {
             mergeApiResponseWithNutritionixData(nutritionixResponse, data);
             console.log("Nutritionix SUCCESS");
             data.apiStatus.nutritionix = 'SUCCESS'; // Mark as successful
+            data.responses.nutritionix = nutritionixResponse.foods;
         } else {
             console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
             data.apiStatus.nutritionix = 'ERROR: No product found'; // Mark as error
@@ -266,10 +106,31 @@ async function fetchDataAndProcess(barcode) {
         console.error('Error fetching data at Nutritionix:', error);
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
-
+    fs.appendFile('testing.txt', JSON.stringify(data, null, 2) + "\nanalysis", (err) => {
+        if (err) {
+            console.error('Error appending to file:', err);
+        } else {
+            console.log('Data successfully appended to file');
+        }
+    });
+    fs.appendFile('testing.txt', JSON.stringify(processApiResponseToLabels(data, data.apiStatus), null, 2) + "\n\n\n\n", (err) => {
+        if (err) {
+            console.error('Error appending to file:', err);
+        } else {
+            console.log('Data successfully appended to file');
+        }
+    });
+    
+    
     return data;
 }
 
+fs.writeFile('testing.txt', '', (err) => {
+
+});
+
+fetchDataAndProcess(27000612323);
+fetchDataAndProcess(5000159461122);
 
 //#region OPEN FOOD FACTS
 // Example: https://world.openfoodfacts.net/api/v2/product/3017624010701
@@ -754,6 +615,8 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
 
 //#endregion
 
+
+
 function processApiResponseToLabels(productData, apiStatus) {
     if (!productData) {
         throw new Error("Response data is missing.");
@@ -761,47 +624,47 @@ function processApiResponseToLabels(productData, apiStatus) {
 
     // Determine the source of ingredients based on API status
     let ingredientsSource;
-    let usingIngredientsText = false;
     if (apiStatus.openFoodFacts === "SUCCESS") {
         ingredientsSource = productData.ingredients;
     } else if (apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") {
         ingredientsSource = productData.ingredients_text;
-        usingIngredientsText = true;
     }
 
     const containsIngredient = (ingredients, keyword) => {
         if (Array.isArray(ingredients)) {
+            // If ingredients is an array of objects
             return ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
         } else if (typeof ingredients === 'string') {
+            // If ingredients is a string
             return ingredients.toLowerCase().includes(keyword);
         }
         return false;
     };
+    const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
+    const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
+    const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
 
-    const hasBeef = containsIngredient(ingredientsSource, 'beef');
-    const hasPork = containsIngredient(ingredientsSource, 'pork');
-    const hasChicken = containsIngredient(ingredientsSource, 'chicken');
-    const hasMilk = containsIngredient(ingredientsSource, 'milk');
-    const hasEgg = containsIngredient(ingredientsSource, 'egg');
-    const hasOnion = containsIngredient(ingredientsSource, 'onion');
-    const hasGarlic = containsIngredient(ingredientsSource, 'garlic');
+    const hasBeef = containsIngredient(productData.ingredients, 'beef');
+    const hasPork = containsIngredient(productData.ingredients, 'pork');
+    const hasChicken = containsIngredient(productData.ingredients, 'chicken');
+    const hasMilk = containsIngredient(productData.ingredients, 'milk');
+    const hasEgg = containsIngredient(productData.ingredients, 'egg');
+    const hasOnion = containsIngredient(productData.ingredients, 'onion');
+    const hasGarlic = containsIngredient(productData.ingredients, 'garlic');
     const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
     const hasMeat = hasBeef || hasPork || hasChicken;
-    const hasFish = containsIngredient(ingredientsSource, 'fish');
+    const hasFish = containsIngredient(productData.ingredients, 'fish');
     const hasRedMeat = hasBeef || hasPork;
-
+    
     // Define a function to check for multiple keywords
-    const checkAllSources = (tagArray, traceArray, keywords) => {
+    const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
         const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
+        const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
         const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
-        
-        if (usingIngredientsText) {
-            // If using ingredients_text, ignore tag and trace checks
-            return 'Unknown';
-        } else {
-            // Check using tag and trace arrays
-            if (checkTag || checkTrace) return 'Yes';
-        }
+
+        if (checkTag) return 'Yes';
+        if (checkIngredient) return 'Yes';
+        if (checkTrace) return 'Traces';
         return 'No';
     };
 

@@ -1,0 +1,666 @@
+{
+  "nutriments": {
+    "calories": 244,
+    "total_fat": 12,
+    "saturated_fat": 3.9000000953674316,
+    "cholesterol": 0,
+    "sodium": 128,
+    "total_carbohydrate": 0,
+    "dietary_fiber": 0,
+    "sugars": 26,
+    "protein": 0,
+    "potassium": 0,
+    "phosphorus": 0
+  },
+  "ingredients": [],
+  "apiStatus": {
+    "openFoodFacts": "ERROR: No product found",
+    "upc": "SUCCESS",
+    "edamam": "ERROR:  No product found",
+    "usda": "ERROR: Fetch failed",
+    "nutritionix": "SUCCESS"
+  },
+  "responses": {
+    "upc": {
+      "code": "OK",
+      "total": 1,
+      "offset": 0,
+      "items": [
+        {
+          "ean": "5000159461122",
+          "title": "Chocolate Snickers 8 Pack Candy Fresh Nice Flavour 1 Free Gift Lion Choco Stick",
+          "description": "",
+          "elid": "222497902991",
+          "brand": "Snickers",
+          "model": "",
+          "color": "",
+          "size": "",
+          "dimension": "",
+          "weight": "",
+          "category": "Food, Beverages & Tobacco > Food Items > Candy & Chocolate",
+          "lowest_recorded_price": 1.49,
+          "highest_recorded_price": 28.96,
+          "images": [],
+          "offers": []
+        }
+      ]
+    },
+    "nutritionix": [
+      {
+        "food_name": "Chocolate Candy Bar",
+        "brand_name": "Snickers",
+        "serving_qty": 1,
+        "serving_unit": "bar",
+        "serving_weight_grams": 50,
+        "nf_metric_qty": 50,
+        "nf_metric_uom": "g",
+        "nf_calories": 244,
+        "nf_total_fat": 12,
+        "nf_saturated_fat": 3.9000000953674316,
+        "nf_cholesterol": null,
+        "nf_sodium": 128,
+        "nf_total_carbohydrate": null,
+        "nf_dietary_fiber": null,
+        "nf_sugars": 26,
+        "nf_protein": null,
+        "nf_potassium": null,
+        "nf_p": null,
+        "full_nutrients": [
+          {
+            "attr_id": 204,
+            "value": 12
+          },
+          {
+            "attr_id": 208,
+            "value": 244
+          },
+          {
+            "attr_id": 269,
+            "value": 26
+          },
+          {
+            "attr_id": 307,
+            "value": 128
+          },
+          {
+            "attr_id": 606,
+            "value": 3.9
+          }
+        ],
+        "nix_brand_name": "Snickers",
+        "nix_brand_id": "51db37be176fe9790a898ec5",
+        "nix_item_name": "Chocolate Candy Bar",
+        "nix_item_id": "58256daaee0d35f3378283c0",
+        "metadata": {},
+        "source": 8,
+        "ndb_no": null,
+        "tags": null,
+        "alt_measures": null,
+        "lat": null,
+        "lng": null,
+        "photo": {
+          "thumb": "https://nutritionix-api.s3.amazonaws.com/656083091075570006b45e96.jpeg",
+          "highres": null,
+          "is_user_uploaded": false
+        },
+        "note": null,
+        "class_code": null,
+        "brick_code": null,
+        "tag_id": null,
+        "updated_at": "2023-11-24T11:03:37+00:00",
+        "nf_ingredient_statement": "Corn Syrup, Sugar, Contains 2% or Less of: Malic Acid, Natural Flavor And Artificial Flavor, Artificial Color (Red 40, Blue 1, Yellow 5, Yellow 6), Mineral Oil, Lecithin (Soy)."
+      }
+    ]
+  },
+  "ean": "5000159461122",
+  "product_name": "Chocolate Snickers 8 Pack Candy Fresh Nice Flavour 1 Free Gift Lion Choco Stick",
+  "elid": "222497902991",
+  "brands": "Snickers",
+  "categories": "Food, Beverages & Tobacco > Food Items > Candy & Chocolate",
+  "lowest_recorded_price": 1.49,
+  "highest_recorded_price": 28.96,
+  "images": [],
+  "offers": [],
+  "servingSizeUnit": "bar",
+  "serving_size": 50,
+  "metricQuantity": 50,
+  "metricUnit": "g",
+  "nixItemName": "Chocolate Candy Bar",
+  "nixItemId": "58256daaee0d35f3378283c0",
+  "metadata": {},
+  "source": 8,
+  "photo": {
+    "thumb": "https://nutritionix-api.s3.amazonaws.com/656083091075570006b45e96.jpeg",
+    "highres": null,
+    "is_user_uploaded": false
+  },
+  "updatedAt": "2023-11-24T11:03:37+00:00",
+  "ingredients_text": "Corn Syrup, Sugar, Contains 2% or Less of: Malic Acid, Natural Flavor And Artificial Flavor, Artificial Color (Red 40, Blue 1, Yellow 5, Yellow 6), Mineral Oil, Lecithin (Soy)."
+}
+analysis{
+  "BarCodeNum": "5000159461122",
+  "Allergens": {
+    "celery": "No",
+    "cereals_containing_gluten": "No",
+    "crustaceans": "No",
+    "eggs": "No",
+    "fish": "No",
+    "lupin": "No",
+    "milk": "No",
+    "molluscs": "No",
+    "mustard": "No",
+    "nuts": "No",
+    "peanuts": "No",
+    "sesame_seeds": "No",
+    "soya_beans": "No",
+    "sulphur_dioxide": "No"
+  },
+  "LifestyleChoices": {
+    "Vegan": "Yes",
+    "LactoVegetarian": "No",
+    "OvoVegetarian": "No",
+    "LactoOvoVegetarian": "No",
+    "Pescatarian": "No",
+    "WhiteMeatOnly": "No",
+    "RedMeatOnly": "No"
+  },
+  "ReligiousRestrictions": {
+    "Halal": "Yes",
+    "Kosher": "No",
+    "Beef": "No",
+    "Jain": "Yes",
+    "Onion": "No"
+  },
+  "DietChoice": {
+    "Keto": "No",
+    "Paleo": "No",
+    "Mediterranean": "No",
+    "SugarFree": "No"
+  },
+  "SustainabilityChoices": {
+    "Local": "No",
+    "Organic": "No",
+    "GeneticallyModified": "No"
+  },
+  "Packaging": {
+    "FullyRecycled": "No",
+    "PartRecycled": "No"
+  },
+  "FoodRatings": {
+    "ABCDERatings": "Unknown",
+    "HighSugarSaltSpecificProducts": "No"
+  },
+  "CountryOfOrigin": "Unknown"
+}
+
+
+
+{
+  "nutriments": {
+    "calcium": 0,
+    "carbohydrates": 0,
+    "cholesterol": 0,
+    "energy": 867,
+    "monounsaturated-fat": 20,
+    "polyunsaturated-fat": 53.33000183105469,
+    "saturated-fat": 13.329999923706055,
+    "fat": 93.33000183105469,
+    "trans-fat": 0,
+    "iron": 0,
+    "fiber": 0,
+    "potassium": 0,
+    "sodium": 0,
+    "proteins": 0,
+    "sugars": 0,
+    "vitamin-a-rae": 0,
+    "vitamin-c": 0,
+    "calories": 120,
+    "total_fat": 14,
+    "saturated_fat": 2,
+    "total_carbohydrate": 0,
+    "dietary_fiber": 0,
+    "protein": 0,
+    "phosphorus": 0
+  },
+  "ingredients": [],
+  "apiStatus": {
+    "openFoodFacts": "ERROR: No product found",
+    "upc": "SUCCESS",
+    "edamam": "SUCCESS",
+    "usda": "ERROR: Fetch failed",
+    "nutritionix": "SUCCESS"
+  },
+  "responses": {
+    "upc": {
+      "code": "OK",
+      "total": 1,
+      "offset": 0,
+      "items": [
+        {
+          "ean": "0027000612323",
+          "title": "Wesson Pure & Cholesterol Free Soybean Vegetable Oil  128 fl oz",
+          "description": "No cooking oil is more versatile than Wesson Pure Vegetable Oil. This all-purpose soybean vegetable oil lets your cooking flavors shine through  so you taste the food  not the oil. Wesson cooking oil has 0 grams of trans fat and is cholesterol free. This one gallon plastic container is perfect for frequent cooks. Wesson shelf-stable soybean cooking oil can be used to bake as a substitute for melted butter  margarine or shortening. It s also great for deep frying  salad dressings  sauces  baking  pan frying or saut?ing chicken  meat  fish and vegetables.",
+          "upc": "027000612323",
+          "brand": "Wesson",
+          "model": "2700061234",
+          "color": "",
+          "size": "",
+          "dimension": "13 X 7 X 6 inches",
+          "weight": "32 Pounds",
+          "category": "Food, Beverages & Tobacco > Food Items > Cooking & Baking Ingredients > Cooking Oils",
+          "currency": "",
+          "lowest_recorded_price": 0,
+          "highest_recorded_price": 29.28,
+          "images": [
+            "https://i5.walmartimages.com/asr/b5bd4f61-1e6f-46a9-bc89-99fd3c5b14a6.830c81c149d8b09a5618a48ac34986e9.jpeg?odnHeight=450&odnWidth=450&odnBg=ffffff",
+            "https://target.scene7.com/is/image/Target/GUEST_9817cdf1-9581-49b3-9054-09cc65ae3edb?wid=1000&hei=1000",
+            "http://ct.mywebgrocer.com/legacy/productimagesroot/DJ/4/5324.jpg",
+            "http://site.unbeatablesale.com/EB329/vlws3526.gif",
+            "https://tshop.r10s.com/df1/f62/6381/6af4/60c7/73cd/5a46/1154e8912aa81e84d038a0.jpg?_ex=512x512",
+            "https://jetimages.jetcdn.net/md5/3f37aa45762da3ea090ec64172834f1c.500"
+          ],
+          "offers": [
+            {
+              "merchant": "UnbeatableSale.com",
+              "domain": "unbeatablesale.com",
+              "title": "Wesson 133 Vegetable Oil Case Of 4",
+              "currency": "",
+              "list_price": "",
+              "price": 35.75,
+              "shipping": "42.99",
+              "condition": "New",
+              "availability": "",
+              "link": "https://www.upcitemdb.com/norob/alink/?id=u2t253y2435394a4u2&tid=1&seq=1701539966&plt=c8dcd20d9d5a60dafe13cbf6e7f6158a",
+              "updated_t": 1456285404
+            },
+            {
+              "merchant": "Rakuten(Buy.com)",
+              "domain": "rakuten.com",
+              "title": "Wesson Vegetable Oil - 128 oz. - 1 Gallon",
+              "currency": "",
+              "list_price": "",
+              "price": 8.99,
+              "shipping": "",
+              "condition": "New",
+              "availability": "",
+              "link": "https://www.upcitemdb.com/norob/alink/?id=w2u263z2z243f454t2&tid=1&seq=1701539966&plt=3aa317ce47786481bc0e1e2104ac970c",
+              "updated_t": 1542669993
+            },
+            {
+              "merchant": "Wal-Mart.com",
+              "domain": "walmart.com",
+              "title": "Wesson Pure & Cholesterol Free Soybean Vegetable Oil  128 fl oz",
+              "currency": "",
+              "list_price": "",
+              "price": 12.27,
+              "shipping": "5.99",
+              "condition": "New",
+              "availability": "",
+              "link": "https://www.upcitemdb.com/norob/alink/?id=y2r2631303y294d4&tid=1&seq=1701539966&plt=e938a5fef4626acf5b108c3b74695744",
+              "updated_t": 1700546460
+            },
+            {
+              "merchant": "Target",
+              "domain": "target.com",
+              "title": "Wesson Vegetable Oil - 128 fl oz",
+              "currency": "",
+              "list_price": "",
+              "price": 7.79,
+              "shipping": "",
+              "condition": "New",
+              "availability": "",
+              "link": "https://www.upcitemdb.com/norob/alink/?id=23p233v2z253f464&tid=1&seq=1701539966&plt=a3a0d503a6d41a95d21b28019085ed48",
+              "updated_t": 1632644297
+            },
+            {
+              "merchant": "Albertsons",
+              "domain": "albertsons.com",
+              "title": "Wesson - Vegetable Oil 128.00 fl oz",
+              "currency": "",
+              "list_price": "",
+              "price": 0,
+              "shipping": "",
+              "condition": "New",
+              "availability": "",
+              "link": "https://www.upcitemdb.com/norob/alink/?id=v2q2330303z2e484s2&tid=1&seq=1701539966&plt=1703bcf3f6aed9a53a9a2192a78b6005",
+              "updated_t": 1484640882
+            },
+            {
+              "merchant": "Jet.com",
+              "domain": "jet.com",
+              "title": "Wesson Natural Pure Vegetable Oil, 128 Fl Oz",
+              "currency": "",
+              "list_price": "",
+              "price": 16.58,
+              "shipping": "",
+              "condition": "New",
+              "availability": "",
+              "link": "https://www.upcitemdb.com/norob/alink/?id=w2s22303x263f454z2&tid=1&seq=1701539966&plt=c59fec4f6605eef2a50f5e664a4faede",
+              "updated_t": 1551371845
+            }
+          ],
+          "asin": "B007F1KVX8",
+          "elid": "186116692489"
+        }
+      ]
+    },
+    "edamamResponse": {
+      "food": {
+        "foodId": "food_b3jy3oxaxcy2wfboxmh1sb552303",
+        "label": "WESSON Vegetable Oil 1 GAL",
+        "knownAs": "WESSON Vegetable Oil 1 GAL",
+        "nutrients": {
+          "ENERC_KCAL": 867,
+          "FAT": 93.33000183105469,
+          "FASAT": 13.329999923706055,
+          "FATRN": 0,
+          "FAMS": 20,
+          "FAPU": 53.33000183105469,
+          "CHOCDF": 0,
+          "FIBTG": 0,
+          "SUGAR": 0,
+          "PROCNT": 0,
+          "CHOLE": 0,
+          "NA": 0,
+          "CA": 0,
+          "K": 0,
+          "FE": 0,
+          "VITA_RAE": 0,
+          "VITC": 0
+        },
+        "brand": "Wesson",
+        "category": "Packaged foods",
+        "categoryLabel": "food",
+        "foodContentsLabel": "Soybean Oil",
+        "image": "https://www.edamam.com/food-img/48b/48b91a1935ca422615eac2ef98414ce8.png",
+        "servingSizes": [
+          {
+            "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_milliliter",
+            "label": "Milliliter",
+            "quantity": 15
+          },
+          {
+            "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_tablespoon",
+            "label": "Tablespoon",
+            "quantity": 1
+          }
+        ]
+      },
+      "measures": [
+        {
+          "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_serving",
+          "label": "Serving",
+          "weight": 14.786764781
+        },
+        {
+          "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_tablespoon",
+          "label": "Tablespoon",
+          "weight": 14.786764781
+        },
+        {
+          "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_gram",
+          "label": "Gram",
+          "weight": 1
+        },
+        {
+          "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_ounce",
+          "label": "Ounce",
+          "weight": 28.349523125
+        },
+        {
+          "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_pound",
+          "label": "Pound",
+          "weight": 453.59237
+        },
+        {
+          "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_kilogram",
+          "label": "Kilogram",
+          "weight": 1000
+        },
+        {
+          "uri": "http://www.edamam.com/ontologies/edamam.owl#Measure_milliliter",
+          "label": "Milliliter",
+          "weight": 0.9857843187333334
+        }
+      ]
+    },
+    "nutritionix": [
+      {
+        "food_name": "Vegetable Oil, Pure",
+        "brand_name": "Wesson",
+        "serving_qty": 1,
+        "serving_unit": "tbsp",
+        "serving_weight_grams": null,
+        "nf_metric_qty": 15,
+        "nf_metric_uom": "ml",
+        "nf_calories": 120,
+        "nf_total_fat": 14,
+        "nf_saturated_fat": 2,
+        "nf_cholesterol": 0,
+        "nf_sodium": 0,
+        "nf_total_carbohydrate": 0,
+        "nf_dietary_fiber": null,
+        "nf_sugars": null,
+        "nf_protein": 0,
+        "nf_potassium": null,
+        "nf_p": null,
+        "full_nutrients": [
+          {
+            "attr_id": 203,
+            "value": 0
+          },
+          {
+            "attr_id": 204,
+            "value": 14
+          },
+          {
+            "attr_id": 205,
+            "value": 0
+          },
+          {
+            "attr_id": 208,
+            "value": 120
+          },
+          {
+            "attr_id": 307,
+            "value": 0
+          },
+          {
+            "attr_id": 601,
+            "value": 0
+          },
+          {
+            "attr_id": 605,
+            "value": 0
+          },
+          {
+            "attr_id": 606,
+            "value": 2
+          },
+          {
+            "attr_id": 645,
+            "value": 3
+          },
+          {
+            "attr_id": 646,
+            "value": 8
+          }
+        ],
+        "nix_brand_name": "Wesson",
+        "nix_brand_id": "51db37e8176fe9790a89a760",
+        "nix_item_name": "Vegetable Oil, Pure",
+        "nix_item_id": "61c9c5614964040007502579",
+        "metadata": {},
+        "source": 8,
+        "ndb_no": null,
+        "tags": null,
+        "alt_measures": null,
+        "lat": null,
+        "lng": null,
+        "photo": {
+          "thumb": "https://assets.syndigo.com/38a21f47-ee3f-4093-9cc4-a6a44921fabe",
+          "highres": null,
+          "is_user_uploaded": false
+        },
+        "note": null,
+        "class_code": null,
+        "brick_code": null,
+        "tag_id": null,
+        "updated_at": "2023-02-28T23:27:08+00:00",
+        "nf_ingredient_statement": "100% Soybean Oil."
+      }
+    ]
+  },
+  "ean": "0027000612323",
+  "product_name": "Wesson Pure & Cholesterol Free Soybean Vegetable Oil  128 fl oz",
+  "upc": "027000612323",
+  "elid": "186116692489",
+  "description": "No cooking oil is more versatile than Wesson Pure Vegetable Oil. This all-purpose soybean vegetable oil lets your cooking flavors shine through  so you taste the food  not the oil. Wesson cooking oil has 0 grams of trans fat and is cholesterol free. This one gallon plastic container is perfect for frequent cooks. Wesson shelf-stable soybean cooking oil can be used to bake as a substitute for melted butter  margarine or shortening. It s also great for deep frying  salad dressings  sauces  baking  pan frying or saut?ing chicken  meat  fish and vegetables.",
+  "brands": "Wesson",
+  "model": "2700061234",
+  "dimension": "13 X 7 X 6 inches",
+  "quantity": "32 Pounds",
+  "categories": "Food, Beverages & Tobacco > Food Items > Cooking & Baking Ingredients > Cooking Oils",
+  "highest_recorded_price": 29.28,
+  "images": [
+    "https://i5.walmartimages.com/asr/b5bd4f61-1e6f-46a9-bc89-99fd3c5b14a6.830c81c149d8b09a5618a48ac34986e9.jpeg?odnHeight=450&odnWidth=450&odnBg=ffffff",
+    "https://target.scene7.com/is/image/Target/GUEST_9817cdf1-9581-49b3-9054-09cc65ae3edb?wid=1000&hei=1000",
+    "http://ct.mywebgrocer.com/legacy/productimagesroot/DJ/4/5324.jpg",
+    "http://site.unbeatablesale.com/EB329/vlws3526.gif",
+    "https://tshop.r10s.com/df1/f62/6381/6af4/60c7/73cd/5a46/1154e8912aa81e84d038a0.jpg?_ex=512x512",
+    "https://jetimages.jetcdn.net/md5/3f37aa45762da3ea090ec64172834f1c.500"
+  ],
+  "offers": [
+    {
+      "merchant": "UnbeatableSale.com",
+      "domain": "unbeatablesale.com",
+      "title": "Wesson 133 Vegetable Oil Case Of 4",
+      "price": 35.75,
+      "shipping": "42.99",
+      "condition": "New",
+      "link": "https://www.upcitemdb.com/norob/alink/?id=u2t253y2435394a4u2&tid=1&seq=1701539966&plt=c8dcd20d9d5a60dafe13cbf6e7f6158a",
+      "updated_t": 1456285404
+    },
+    {
+      "merchant": "Rakuten(Buy.com)",
+      "domain": "rakuten.com",
+      "title": "Wesson Vegetable Oil - 128 oz. - 1 Gallon",
+      "price": 8.99,
+      "condition": "New",
+      "link": "https://www.upcitemdb.com/norob/alink/?id=w2u263z2z243f454t2&tid=1&seq=1701539966&plt=3aa317ce47786481bc0e1e2104ac970c",
+      "updated_t": 1542669993
+    },
+    {
+      "merchant": "Wal-Mart.com",
+      "domain": "walmart.com",
+      "title": "Wesson Pure & Cholesterol Free Soybean Vegetable Oil  128 fl oz",
+      "price": 12.27,
+      "shipping": "5.99",
+      "condition": "New",
+      "link": "https://www.upcitemdb.com/norob/alink/?id=y2r2631303y294d4&tid=1&seq=1701539966&plt=e938a5fef4626acf5b108c3b74695744",
+      "updated_t": 1700546460
+    },
+    {
+      "merchant": "Target",
+      "domain": "target.com",
+      "title": "Wesson Vegetable Oil - 128 fl oz",
+      "price": 7.79,
+      "condition": "New",
+      "link": "https://www.upcitemdb.com/norob/alink/?id=23p233v2z253f464&tid=1&seq=1701539966&plt=a3a0d503a6d41a95d21b28019085ed48",
+      "updated_t": 1632644297
+    },
+    {
+      "merchant": "Albertsons",
+      "domain": "albertsons.com",
+      "title": "Wesson - Vegetable Oil 128.00 fl oz",
+      "condition": "New",
+      "link": "https://www.upcitemdb.com/norob/alink/?id=v2q2330303z2e484s2&tid=1&seq=1701539966&plt=1703bcf3f6aed9a53a9a2192a78b6005",
+      "updated_t": 1484640882
+    },
+    {
+      "merchant": "Jet.com",
+      "domain": "jet.com",
+      "title": "Wesson Natural Pure Vegetable Oil, 128 Fl Oz",
+      "price": 16.58,
+      "condition": "New",
+      "link": "https://www.upcitemdb.com/norob/alink/?id=w2s22303x263f454z2&tid=1&seq=1701539966&plt=c59fec4f6605eef2a50f5e664a4faede",
+      "updated_t": 1551371845
+    }
+  ],
+  "foodId": "food_b3jy3oxaxcy2wfboxmh1sb552303",
+  "knownAs": "WESSON Vegetable Oil 1 GAL",
+  "categoryLabel": "food",
+  "ingredients_text": "Soybean Oil",
+  "image_url": "https://www.edamam.com/food-img/48b/48b91a1935ca422615eac2ef98414ce8.png",
+  "servingSizeUnit": "tbsp",
+  "metricQuantity": 15,
+  "metricUnit": "ml",
+  "nixItemName": "Vegetable Oil, Pure",
+  "nixItemId": "61c9c5614964040007502579",
+  "metadata": {},
+  "source": 8,
+  "photo": {
+    "thumb": "https://assets.syndigo.com/38a21f47-ee3f-4093-9cc4-a6a44921fabe",
+    "highres": null,
+    "is_user_uploaded": false
+  },
+  "updatedAt": "2023-02-28T23:27:08+00:00"
+}
+analysis{
+  "BarCodeNum": "0027000612323",
+  "Allergens": {
+    "celery": "No",
+    "cereals_containing_gluten": "No",
+    "crustaceans": "No",
+    "eggs": "No",
+    "fish": "No",
+    "lupin": "No",
+    "milk": "No",
+    "molluscs": "No",
+    "mustard": "No",
+    "nuts": "No",
+    "peanuts": "No",
+    "sesame_seeds": "No",
+    "soya_beans": "No",
+    "sulphur_dioxide": "No"
+  },
+  "LifestyleChoices": {
+    "Vegan": "Yes",
+    "LactoVegetarian": "No",
+    "OvoVegetarian": "No",
+    "LactoOvoVegetarian": "No",
+    "Pescatarian": "No",
+    "WhiteMeatOnly": "No",
+    "RedMeatOnly": "No"
+  },
+  "ReligiousRestrictions": {
+    "Halal": "Yes",
+    "Kosher": "No",
+    "Beef": "No",
+    "Jain": "Yes",
+    "Onion": "No"
+  },
+  "DietChoice": {
+    "Keto": "No",
+    "Paleo": "No",
+    "Mediterranean": "No",
+    "SugarFree": "No"
+  },
+  "SustainabilityChoices": {
+    "Local": "No",
+    "Organic": "No",
+    "GeneticallyModified": "No"
+  },
+  "Packaging": {
+    "FullyRecycled": "No",
+    "PartRecycled": "No"
+  },
+  "FoodRatings": {
+    "ABCDERatings": "Unknown",
+    "HighSugarSaltSpecificProducts": "No"
+  },
+  "CountryOfOrigin": "Unknown"
+}
+
+
+

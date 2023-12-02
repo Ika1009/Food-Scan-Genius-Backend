@@ -19,7 +19,7 @@ async function fetchAnalysis() {
         'PartRecycled', 'ABCDERatings', 'HighSugarSaltSpecificProducts', 'CountryOfOrigin',
         'Fat', 'Iron', 'Salt', 'Fiber', 'Energy', 'Sodium', 'Sugars', 'Alcohol', 'Calcium',
         'Carbohydrates', 'Proteins', 'SaturatedFat', 'TransFat', 'VitaminA', 'VitaminC', 'Potassium',
-        'Phosphorus', 'Ingredients'
+        'Phosphorus', 'Ingredients', 'Ingredients_text'
     ];
 
 
@@ -45,6 +45,7 @@ async function fetchAnalysis() {
                 noProductFound[0] = barcode; // Put the barcode in the first column
                 fs.appendFileSync('analysis.csv', noProductFound.join(',') + '\n');
             } else {
+                console.log(response.data);
                 const analysis = response.analysis;
                 const additionalData = {
                     brands: response.data.brands || response.data.brand || response.data.brand_name,
@@ -55,8 +56,10 @@ async function fetchAnalysis() {
                     description: response.data.description,
                     apiStatus: response.data.apiStatus,
                     nutriments: response.data.nutriments, // Add this line
-                    ingredients: response.data.ingredients // Add this line
+                    ingredients: response.data.ingredients, // Add this line
+                    ingredients_text: response.data.ingredients_text // Add this line
                 };
+                
                 const flattenedAnalysis = flattenAnalysis(analysis, additionalData);
                 fs.appendFileSync('analysis.csv', 
                 flattenedAnalysis.join(',') + 
@@ -106,38 +109,9 @@ function isEmpty(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
-// Call the function to start the process
-//fetchAnalysis();
+fetchAnalysis();
 
 
-const NUTRITIONIX_APP_ID = '918f9c08';
-const NUTRITIONIX_API_KEY = '3b8384ce0ff9e531b1d812f72c675b6c';  // You provided two API keys; I'm using the first one here
-
-async function getProductByNutritionix(barcode) {
-    const BASE_URL = 'https://trackapi.nutritionix.com/v2/search/item';
-    try {
-        const response = await axios.get(BASE_URL, {
-            headers: {
-                'x-app-id': NUTRITIONIX_APP_ID,
-                'x-app-key': NUTRITIONIX_API_KEY
-            },
-            params: {
-                upc: barcode
-            },
-            timeout: 3000
-        });
-
-        if (response.status === 200 && response.data && Array.isArray(response.data.foods)) {
-            console.log(response.data);
-        } else {
-            console.error('Error fetching data from Nutritionix or unexpected structure:', response.status, response.statusText);
-        }
-    } catch (error) {
-        console.error('Error at Nutritionix:', error.message);
-    }
-}
-
-getProductByNutritionix(5000159461122);
 
 // // Import the geo-tz library
 // const geoTz = require('geo-tz').find;
