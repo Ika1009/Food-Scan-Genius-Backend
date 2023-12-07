@@ -758,111 +758,266 @@ function processApiResponseToLabels(productData, apiStatus) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
-
-    // Determine the source of ingredients based on API status
-    let ingredientsSource;
-    let usingIngredientsText = false;
     if (apiStatus.openFoodFacts === "SUCCESS") {
-        ingredientsSource = productData.ingredients;
-    } else if (apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") {
-        ingredientsSource = productData.ingredients_text;
-        usingIngredientsText = true;
-    }
 
-    const containsIngredient = (ingredients, keyword) => {
-        if (Array.isArray(ingredients)) {
-            return ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
-        } else if (typeof ingredients === 'string') {
-            return ingredients.toLowerCase().includes(keyword);
-        }
-        return false;
-    };
+        const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
+        const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
+        const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
+        const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
 
-    const hasBeef = containsIngredient(ingredientsSource, 'beef');
-    const hasPork = containsIngredient(ingredientsSource, 'pork');
-    const hasChicken = containsIngredient(ingredientsSource, 'chicken');
-    const hasMilk = containsIngredient(ingredientsSource, 'milk');
-    const hasEgg = containsIngredient(ingredientsSource, 'egg');
-    const hasOnion = containsIngredient(ingredientsSource, 'onion');
-    const hasGarlic = containsIngredient(ingredientsSource, 'garlic');
-    const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
-    const hasMeat = hasBeef || hasPork || hasChicken;
-    const hasFish = containsIngredient(ingredientsSource, 'fish');
-    const hasRedMeat = hasBeef || hasPork;
-
-    // Define a function to check for multiple keywords
-    const checkAllSources = (tagArray, traceArray, keywords) => {
-        const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
-        const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
+        const hasBeef = containsIngredient(productData.ingredients, 'beef');
+        const hasPork = containsIngredient(productData.ingredients, 'pork');
+        const hasChicken = containsIngredient(productData.ingredients, 'chicken');
+        const hasMilk = containsIngredient(productData.ingredients, 'milk');
+        const hasEgg = containsIngredient(productData.ingredients, 'egg');
+        const hasOnion = containsIngredient(productData.ingredients, 'onion');
+        const hasGarlic = containsIngredient(productData.ingredients, 'garlic');
+        const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
+        const hasMeat = hasBeef || hasPork || hasChicken;
+        const hasFish = containsIngredient(productData.ingredients, 'fish');
+        const hasRedMeat = hasBeef || hasPork;
         
-        if (usingIngredientsText) {
-            // If using ingredients_text, ignore tag and trace checks
-            return 'Unknown';
-        } else {
-            // Check using tag and trace arrays
-            if (checkTag || checkTrace) return 'Yes';
+        // Define a function to check for multiple keywords
+        const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
+            const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
+            const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
+            const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
+
+            if (checkTag) return 'Yes';
+            if (checkIngredient) return 'Yes';
+            if (checkTrace) return 'Traces';
+            return 'No';
+        };
+
+        const result = {
+            BarCodeNum: productData.code || productData.ean,
+            TimeStamp: productData.last_modified_t,
+            Allergens: {
+                celery: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['celery']),
+                cereals_containing_gluten: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['cereals-containing-gluten', 'wheat', 'rye', 'barley', 'oats']),
+                crustaceans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['crustaceans', 'prawns', 'crab', 'lobster']),
+                eggs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['eggs', 'egg']),
+                fish: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['fish']),
+                lupin: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['lupin']),
+                milk: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['milk']),
+                molluscs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['molluscs', 'squid', 'mussels', 'cockles', 'whelks', 'snails']),
+                mustard: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['mustard']),
+                nuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['nuts']),
+                peanuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['peanuts']),
+                sesame_seeds: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sesame-seeds', 'sesame']),
+                soya_beans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['soya-beans', 'soya']),
+                sulphur_dioxide: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sulphur-dioxide', 'sulphur', 'sulphites'])
+            },
+            LifestyleChoices: {
+                Vegan: !hasAnimalProducts && productData.ingredients && productData.ingredients.every(i => i.vegan === 'yes') ? 'Yes' : 'No',
+                LactoVegetarian: hasMilk && !hasMeat && !hasFish ? 'Yes' : 'No',
+                OvoVegetarian: hasEgg && !hasMeat && !hasFish ? 'Yes' : 'No',
+                LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish ? 'Yes' : 'No',
+                Pescatarian: hasFish && !hasMeat ? 'Yes' : 'No',
+                WhiteMeatOnly: hasChicken && !hasRedMeat ? 'Yes' : 'No',
+                RedMeatOnly: hasRedMeat && !hasChicken ? 'Yes' : 'No',
+            },
+            ReligiousRestrictions: {
+                Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
+                Kosher: containsTag(productData.labels_tags, 'kosher') || 'Unknown',
+                Beef: hasBeef ? 'Yes' : 'No',
+                Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
+                Onion: hasOnion ? 'Yes' : 'No',
+            },
+            DietChoice: {
+                Keto: containsKeyword(productData._keywords, 'keto'),
+                Paleo: containsKeyword(productData._keywords, 'paleo'),
+                Mediterranean: containsKeyword(productData._keywords, 'mediterranean'),
+                SugarFree: containsKeyword(productData._keywords, 'sugar-free')
+            },
+            SustainabilityChoices: {
+                Local: containsTag(productData.labels_tags, 'local'),
+                Organic: containsTag(productData.labels_tags, 'organic'),
+                GeneticallyModified: containsTag(productData.labels_tags, 'gmo')
+            },
+            Packaging: {
+                FullyRecycled: containsTag(productData.packaging_tags, 'fully-recycled'),
+                PartRecycled: containsTag(productData.packaging_tags, 'part-recycled')
+            },
+            FoodRatings: {
+                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
+            },
+            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
+        };
+
+        return result;
+    } 
+    else if (apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") {
+        ingredientsSource = productData.ingredients_text;
+            
+        ingredientsSource = productData.ingredients_text;
+
+        const containsIngredient = (ingredientsText, keyword) => {
+            return ingredientsText.toLowerCase().includes(keyword.toLowerCase());
+        };
+    
+        const hasBeef = containsIngredient(ingredientsSource, 'beef');
+        const hasPork = containsIngredient(ingredientsSource, 'pork');
+        const hasChicken = containsIngredient(ingredientsSource, 'chicken');
+        const hasMilk = containsIngredient(ingredientsSource, 'milk');
+        const hasEgg = containsIngredient('eggs') || containsIngredient('egg');
+        const hasOnion = containsIngredient(ingredientsSource, 'onion');
+        const hasGarlic = containsIngredient(ingredientsSource, 'garlic');
+        const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
+        const hasMeat = hasBeef || hasPork || hasChicken;
+        const hasFish = containsIngredient(ingredientsSource, 'fish');
+        const hasRedMeat = hasBeef || hasPork;
+        function determineKeto() {
+            if (productData.nutriments.carbohydrates === undefined || productData.nutriments.carbohydrates === null) {
+                return false;
+            }
+            return productData.nutriments.carbohydrates < 10 && productData.nutriments.fat > productData.nutriments.proteins;
         }
-        return 'No';
-    };
+        
+        function determinePaleo() {
+            return !hasMilk && !containsIngredient('dairy') && !containsIngredient('grains') && !containsIngredient('legumes') && !containsIngredient('processed sugar');
+        }
+        
+        function determineMediterranean() {
+            return containsIngredient('olive oil') || (hasFish && !containsIngredient('red meat') && !containsIngredient('sugar'));
+        }
+        
+        function determineSugarFree() {
+            if (productData.nutriments.sugars === undefined || productData.nutriments.sugars === null) {
+                return false;
+            }
+            return productData.nutriments.sugars === 0;
+        }
+        
+        // Helper function (used in determinePaleo and determineMediterranean)
+        function containsIngredient(keyword) {
+            let ingredients = productData.ingredients_text.toLowerCase();
+            return ingredients.includes(keyword.toLowerCase());
+        }
+        
 
-    const result = {
-        BarCodeNum: productData.code || productData.ean,
-        TimeStamp: productData.last_modified_t,
-        Allergens: {
-            celery: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['celery']),
-            cereals_containing_gluten: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['cereals-containing-gluten', 'wheat', 'rye', 'barley', 'oats']),
-            crustaceans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['crustaceans', 'prawns', 'crab', 'lobster']),
-            eggs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['eggs', 'egg']),
-            fish: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['fish']),
-            lupin: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['lupin']),
-            milk: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['milk']),
-            molluscs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['molluscs', 'squid', 'mussels', 'cockles', 'whelks', 'snails']),
-            mustard: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['mustard']),
-            nuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['nuts']),
-            peanuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['peanuts']),
-            sesame_seeds: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sesame-seeds', 'sesame']),
-            soya_beans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['soya-beans', 'soya']),
-            sulphur_dioxide: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sulphur-dioxide', 'sulphur', 'sulphites'])
-        },
-        LifestyleChoices: {
-            Vegan: !hasAnimalProducts && productData.ingredients && productData.ingredients.every(i => i.vegan === 'yes') ? 'Yes' : 'No',
-            LactoVegetarian: hasMilk && !hasMeat && !hasFish ? 'Yes' : 'No',
-            OvoVegetarian: hasEgg && !hasMeat && !hasFish ? 'Yes' : 'No',
-            LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish ? 'Yes' : 'No',
-            Pescatarian: hasFish && !hasMeat ? 'Yes' : 'No',
-            WhiteMeatOnly: hasChicken && !hasRedMeat ? 'Yes' : 'No',
-            RedMeatOnly: hasRedMeat && !hasChicken ? 'Yes' : 'No',
-        },
-        ReligiousRestrictions: {
-            Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
-            Kosher: containsTag(productData.labels_tags, 'kosher') || 'Unknown',
-            Beef: hasBeef ? 'Yes' : 'No',
-            Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
-            Onion: hasOnion ? 'Yes' : 'No',
-        },
-        DietChoice: {
-            Keto: containsKeyword(productData._keywords, 'keto'),
-            Paleo: containsKeyword(productData._keywords, 'paleo'),
-            Mediterranean: containsKeyword(productData._keywords, 'mediterranean'),
-            SugarFree: containsKeyword(productData._keywords, 'sugar-free')
-        },
-        SustainabilityChoices: {
-            Local: containsTag(productData.labels_tags, 'local'),
-            Organic: containsTag(productData.labels_tags, 'organic'),
-            GeneticallyModified: containsTag(productData.labels_tags, 'gmo')
-        },
-        Packaging: {
-            FullyRecycled: containsTag(productData.packaging_tags, 'fully-recycled'),
-            PartRecycled: containsTag(productData.packaging_tags, 'part-recycled')
-        },
-        FoodRatings: {
-            ABCDERatings: productData.nutrition_grades || 'Unknown',
-            HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
-        },
-        CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
-    };
+        const result = {
+            BarCodeNum: productData.code || productData.ean,
+            TimeStamp: productData.last_modified_t,
+            Allergens: {
+                celery: containsIngredient('celery'),
+                cereals_containing_gluten: containsIngredient('wheat') || containsIngredient('rye') || containsIngredient('barley') || containsIngredient('oats'),
+                crustaceans: containsIngredient('crustaceans') || containsIngredient('prawns') || containsIngredient('crab') || containsIngredient('lobster'),
+                eggs: hasEgg,
+                fish: hasFish,
+                lupin: containsIngredient('lupin'),
+                hasMilk: hasMilk,
+                molluscs: containsIngredient('molluscs') || containsIngredient('squid') || containsIngredient('mussels') || containsIngredient('cockles') || containsIngredient('whelks') || containsIngredient('snails'),
+                mustard: containsIngredient('mustard'),
+                nuts: containsIngredient('nuts'),
+                peanuts: containsIngredient('peanuts'),
+                sesame_seeds: containsIngredient('sesame-seeds') || containsIngredient('sesame'),
+                soya_beans: containsIngredient('soya-beans') || containsIngredient('soya'),
+                sulphur_dioxide: containsIngredient('sulphur-dioxide') || containsIngredient('sulphur') || containsIngredient('sulphites')
+            },
+            LifestyleChoices: {
+                Vegan: !hasAnimalProducts,
+                LactoVegetarian: hasMilk && !hasMeat && !hasFish,
+                OvoVegetarian: hasEgg && !hasMeat && !hasFish,
+                LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish,
+                Pescatarian: hasFish && !hasMeat,
+                WhiteMeatOnly: hasChicken && !hasRedMeat,
+                RedMeatOnly: hasRedMeat && !hasChicken
+            },
+            ReligiousRestrictions: {
+                Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
+                Kosher: 'Unknown',
+                Beef: hasBeef ? 'Yes' : 'No',
+                Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
+                Onion: hasOnion ? 'Yes' : 'No'
+            },
+            DietChoice: {
+                Keto: determineKeto(),
+                Paleo: determinePaleo(),
+                Mediterranean: determineMediterranean(),
+                SugarFree: determineSugarFree()
+            },
+            SustainabilityChoices: {
+                Local: "Uknown",
+                Organic: productData.description && productData.description.toLowerCase().includes("organic") ? 'Yes' : 'Unknown',
+                GeneticallyModified: productData.description && productData.description.toLowerCase().includes("gmo") ? 'Yes' : 'Unknown',
 
-    return result;
+            },
+            Packaging: {
+                FullyRecycled: "Uknown",
+                PartRecycled: "Uknown"
+            },
+            FoodRatings: {
+                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                HighSugarSaltSpecificProducts: productData.nutriments && 
+                ((productData.nutriments.sugar !== undefined && productData.nutriments.sugar > 40) || 
+                 (productData.nutriments.salt !== undefined && productData.nutriments.salt > 40)) ? 'Yes' : 'No'
+            },
+            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
+        };
+
+        return result;
+    }
+    else {
+        const result = {
+            BarCodeNum: productData.code || productData.ean,
+            TimeStamp: productData.last_modified_t,
+            Allergens: {
+                celery: "Unknown",
+                cereals_containing_gluten: "Unknown",
+                crustaceans: "Unknown",
+                eggs: "Unknown",
+                fish: "Unknown",
+                lupin: "Unknown",
+                milk: "Unknown",
+                molluscs: "Unknown",
+                mustard: "Unknown",
+                nuts: "Unknown",
+                peanuts: "Unknown",
+                sesame_seeds: "Unknown",
+                soya_beans: "Unknown",
+                sulphur_dioxide: "Unknown"
+            },
+            LifestyleChoices: {
+                Vegan: 'Unknown',
+                LactoVegetarian: 'Unknown',
+                OvoVegetarian: 'Unknown',
+                LactoOvoVegetarian: 'Unknown',
+                Pescatarian: 'Unknown',
+                WhiteMeatOnly: 'Unknown',
+                RedMeatOnly: 'Unknown',
+            },
+            ReligiousRestrictions: {
+                Halal: 'Unknown',
+                Kosher: 'Unknown',
+                Beef: 'Unknown',
+                Jain: 'Unknown',
+                Onion: 'Unknown',
+            },
+            DietChoice: {
+                Keto: 'Unknown',
+                Paleo: 'Unknown',
+                Mediterranean: 'Unknown',
+                SugarFree: 'Unknown'
+            },
+            SustainabilityChoices: {
+                Local: 'Unknown',
+                Organic: 'Unknown',
+                GeneticallyModified: 'Unknown'
+            },
+            Packaging: {
+                FullyRecycled: 'Unknown',
+                PartRecycled: 'Unknown'
+            },
+            FoodRatings: {
+                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
+            },
+            CountryOfOrigin: 'Unknown'
+        };
+        return result;
+    }
 }
 
 
