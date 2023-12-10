@@ -848,25 +848,23 @@ function processApiResponseToLabels(productData, apiStatus) {
 
         return result;
     } 
-    else if (apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") {
-        ingredientsSource = productData.ingredients_text;
-            
-        ingredientsSource = productData.ingredients_text;
+    else if ((apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") && productData.ingredients_text && productData.ingredients_text.trim() !== "") {
+        //console.log("INGREDIENTS LOWER TEXT IS: " + productData.ingredients_text.toLowerCase());
 
-        const containsIngredient = (ingredientsText, keyword) => {
-            return ingredientsText.toLowerCase().includes(keyword.toLowerCase());
+        const containsIngredient = (keyword) => {
+            return productData.ingredients_text.toLowerCase().includes(keyword.toLowerCase());
         };
     
-        const hasBeef = containsIngredient(ingredientsSource, 'beef');
-        const hasPork = containsIngredient(ingredientsSource, 'pork');
-        const hasChicken = containsIngredient(ingredientsSource, 'chicken');
-        const hasMilk = containsIngredient(ingredientsSource, 'milk');
+        const hasBeef = containsIngredient('beef');
+        const hasPork = containsIngredient('pork');
+        const hasChicken = containsIngredient('chicken');
+        const hasMilk = containsIngredient('milk');
         const hasEgg = containsIngredient('eggs') || containsIngredient('egg');
-        const hasOnion = containsIngredient(ingredientsSource, 'onion');
-        const hasGarlic = containsIngredient(ingredientsSource, 'garlic');
+        const hasOnion = containsIngredient('onion');
+        const hasGarlic = containsIngredient('garlic');
         const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
         const hasMeat = hasBeef || hasPork || hasChicken;
-        const hasFish = containsIngredient(ingredientsSource, 'fish');
+        const hasFish = containsIngredient('fish');
         const hasRedMeat = hasBeef || hasPork;
         function determineKeto() {
             if (productData.nutriments.carbohydrates === undefined || productData.nutriments.carbohydrates === null) {
@@ -889,13 +887,6 @@ function processApiResponseToLabels(productData, apiStatus) {
             }
             return productData.nutriments.sugars === 0;
         }
-        
-        // Helper function (used in determinePaleo and determineMediterranean)
-        function containsIngredient(keyword) {
-            let ingredients = productData.ingredients_text.toLowerCase();
-            return ingredients.includes(keyword.toLowerCase());
-        }
-        
 
         const result = {
             BarCodeNum: productData.code || productData.ean,
