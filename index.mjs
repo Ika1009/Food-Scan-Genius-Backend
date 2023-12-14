@@ -290,11 +290,11 @@ async function fetchDataAndProcess(barcode) {
                 const percent = parseFloat(percentMatch[1]);
                 totalSpecifiedPercent += percent;
                 return {
-                    text: ingredient.replace(percentRegex, '').trim(),
+                    id: ingredient.replace(percentRegex, '').trim(),
                     percent_estimate: percent
                 };
             } else {
-                return { text: ingredient, percent_estimate: null };
+                return { id: ingredient, percent_estimate: null };
             }
         });
 
