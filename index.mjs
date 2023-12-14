@@ -8,11 +8,11 @@ export const handler = async (event) => {
         // Check if the only properties in data are nutriments, ingredients, analysis, and apiStatus
         const keys = Object.keys(data);
         if (keys.length !== 3) return false;
-    
+
         // Check if nutriments, ingredients, and analysis are empty
         if (Object.keys(data.nutriments).length !== 0) return false;
         if (data.ingredients.length !== 0) return false;
-    
+
         // If we reach here, it means data meets the criteria for "No product found"
         return true;
     }
@@ -20,7 +20,7 @@ export const handler = async (event) => {
         const regex = /^\d+$/;
         return regex.test(barcode);
     }
-    try {          
+    try {
         if (!event.queryStringParameters || !event.queryStringParameters.barcode) {
             return {
                 statusCode: 400,
@@ -74,15 +74,15 @@ export const handler = async (event) => {
             statusCode: 200,
             body: response
         };
-    } 
+    }
     catch (error) {
         console.error("Handler error:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: "Handler error: " + error}),
+            body: JSON.stringify({ error: "Handler error: " + error }),
         };
     }
-    
+
 };
 
 // Import the geo-tz library
@@ -90,12 +90,12 @@ import { find as geoTz } from 'geo-tz';
 
 // Define a function to get timezone
 function getTimezone(latitude, longitude) {
-  // Use the find method from geo-tz to get the timezone
-  const timezones = geoTz(latitude, longitude)
-  if (timezones.length === 0) {
-    return ["unknown"];
-  }
-  return timezones;
+    // Use the find method from geo-tz to get the timezone
+    const timezones = geoTz(latitude, longitude)
+    if (timezones.length === 0) {
+        return ["unknown"];
+    }
+    return timezones;
 }
 
 async function getFromDynamoDB(barcode) {
@@ -175,8 +175,7 @@ async function fetchDataAndProcess(barcode) {
     // OPEN FOOD FACTS
     try {
         const response = await getProductByBarcode(barcode);
-        if(response && response.product)
-        {
+        if (response && response.product) {
             extractDataFromApiResponse(response.product, data);
             console.log("OPEN FOOD FACTS SUCCESS")
             data.apiStatus.openFoodFacts = 'SUCCESS'; // Mark as successful
@@ -185,7 +184,7 @@ async function fetchDataAndProcess(barcode) {
             data.apiStatus.openFoodFacts = 'ERROR: No product found'; // Mark as error
             console.error('Unexpected API response structure at Open Food Facts:', response);
         }
-    } catch(error) {
+    } catch (error) {
         data.apiStatus.openFoodFacts = 'ERROR: Fetch Failed'; // Mark as error
         console.error('Error fetching product at OPEN FOOD FACTS:', error);
     }
@@ -193,18 +192,16 @@ async function fetchDataAndProcess(barcode) {
     // UPC
     try {
         const upcResponse = await getProductByUPC(barcode);
-        if(upcResponse)
-        {
+        if (upcResponse) {
             mergeApiResponseWithExtractedData(upcResponse, data);
             console.log("UPC SUCCESS")
             data.apiStatus.upc = 'SUCCESS'; // Mark as successful
         }
-        else 
-        {
+        else {
             data.apiStatus.upc = 'ERROR:  No product found'; // Mark as error
             console.error('Unexpected API response structure at UPC:', upcResponse);
         }
-    } catch(error) {
+    } catch (error) {
         data.apiStatus.upc = 'ERROR: Fetch Failed'; // Mark as error
         console.error('Error fetching product at UPC:', error);
     }
@@ -212,7 +209,7 @@ async function fetchDataAndProcess(barcode) {
     // Edamam
     try {
         const edamamResponse = await getProductByEdamam(barcode);
-        if(edamamResponse && edamamResponse.hints[0]) {
+        if (edamamResponse && edamamResponse.hints[0]) {
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
             console.log("EDAMAM SUCCESS");
             data.apiStatus.edamam = 'SUCCESS'; // Mark as successful
@@ -221,19 +218,18 @@ async function fetchDataAndProcess(barcode) {
             data.apiStatus.edamam = 'ERROR:  No product found'; // Mark as error
         }
 
-    } catch(error) {
+    } catch (error) {
         console.error('Error fetching product at Edamam:', error);
         data.apiStatus.edamam = 'ERROR: Fetch Failed'; // Mark as error
     }
 
     //USDA
-    try
-    {
+    try {
         let name = data.product_name;
 
-        if(name) {
+        if (name) {
             const usdaResponse = await USDA_searchFoodByName(name);
-            if(usdaResponse && usdaResponse.foods[0]) {
+            if (usdaResponse && usdaResponse.foods[0]) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
                 console.log("USDA SUCCESS")
                 data.apiStatus.usda = 'SUCCESS'; // Mark as successful
@@ -242,11 +238,11 @@ async function fetchDataAndProcess(barcode) {
                 console.error('No product found at USDA:', usdaResponse);
             }
         }
-        else{
+        else {
             data.apiStatus.usda = 'ERROR: No product found'; // Mark as error
             console.error('No product found at USDA:', usdaResponse);
         }
-    } catch(error) {
+    } catch (error) {
         console.error('Error fetching product at USDA:', error);
         data.apiStatus.usda = 'ERROR: Fetch failed'; // Mark as error
     }
@@ -262,39 +258,44 @@ async function fetchDataAndProcess(barcode) {
             console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
             data.apiStatus.nutritionix = 'ERROR: No product found'; // Mark as error
         }
-    } catch(error) {
+    } catch (error) {
         console.error('Error fetching data at Nutritionix:', error);
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
 
 
-// Check if ingredients are still empty and ingredient_text is not empty or null
-if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
-    let splitIngredients;
-    data.ingredient_text = data.ingredient_text.replace(/^INGREDIENTS:\s*/, '');
+    // Check if ingredients are still empty and ingredient_text is not empty or null
+    if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
+        let splitIngredients;
+        data.ingredient_text = data.ingredient_text.replace(/^INGREDIENTS:\s*/, '');
 
-    // Check if ingredient_text contains ';' and split by it, otherwise split by ','
-    if (data.ingredient_text.includes(';')) {
-        splitIngredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
-    } else {
-        splitIngredients = data.ingredient_text.split(',').map(ingredient => ingredient.trim());
+        // Check if ingredient_text contains ';' and split by it, otherwise split by ','
+        if (data.ingredient_text.includes(';')) {
+            splitIngredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
+        } else {
+            splitIngredients = data.ingredient_text.split(',').map(ingredient => ingredient.trim());
+        }
+
+        // Calculate percent_estimate for each ingredient
+        const percentEstimate = 100 / splitIngredients.length;
+
+        // Create an object for each ingredient with text and percent_estimate properties
+        data.ingredients = splitIngredients.map(ingredient => ({
+            text: ingredient,
+            percent_estimate: percentEstimate
+        }));
     }
 
-    // Calculate percent_estimate for each ingredient
-    const percentEstimate = 100 / splitIngredients.length;
 
-    // Create an object for each ingredient with text and percent_estimate properties
-    data.ingredients = splitIngredients.map(ingredient => ({
-        text: ingredient,
-        percent_estimate: percentEstimate
-    }));
-}
- else
- {
-    
- }
+    // Sorting nuriments
+    const sortedPairs = Object.entries(data.nutriments)
+        .filter(([key, value]) => value !== null)
+        .sort((a, b) => b[1] - a[1]);
+    const sortedNutriments = {};
+    for (const [key, value] of sortedPairs) { sortedNutriments[key] = value; }
+    data.nutriments = sortedNutriments;
 
- return data;
+    return data;
 }
 
 
@@ -318,16 +319,16 @@ async function getProductByBarcode(barcode) {
 
 function extractDataFromApiResponse(apiResponse, data) {
     const nutrimentFields = [
-        'fat', 'iron', 'salt', 'fiber', 'energy', 'sodium', 'sugars', 'alcohol', 'calcium', 
-        'fat_unit', 'proteins', 'iron_unit', 'salt_unit', 'trans-fat', 'vitamin-a', 'vitamin-c', 
-        'fiber_unit', 'iron_label', 'nova-group', 'energy_unit', 'sodium_unit', 'sugars_unit', 
-        'alcohol_unit', 'calcium_unit', 'carbohydrates', 'proteins_unit', 'saturated-fat', 
-        'energy_serving', 'potassium_100g', 'trans-fat_unit', 'vitamin-a_unit', 'vitamin-c_unit', 
-        'alcohol_serving', 'energy-kcal', 'energy-kcal_unit', 'carbohydrates_unit', 'nutrition-score-fr', 
-        'nutrition-score-uk', 'saturated-fat_unit', 'monounsaturated-fat_100g', 'polyunsaturated-fat_100g', 
+        'fat', 'iron', 'salt', 'fiber', 'energy', 'sodium', 'sugars', 'alcohol', 'calcium',
+        'fat_unit', 'proteins', 'iron_unit', 'salt_unit', 'trans-fat', 'vitamin-a', 'vitamin-c',
+        'fiber_unit', 'iron_label', 'nova-group', 'energy_unit', 'sodium_unit', 'sugars_unit',
+        'alcohol_unit', 'calcium_unit', 'carbohydrates', 'proteins_unit', 'saturated-fat',
+        'energy_serving', 'potassium_100g', 'trans-fat_unit', 'vitamin-a_unit', 'vitamin-c_unit',
+        'alcohol_serving', 'energy-kcal', 'energy-kcal_unit', 'carbohydrates_unit', 'nutrition-score-fr',
+        'nutrition-score-uk', 'saturated-fat_unit', 'monounsaturated-fat_100g', 'polyunsaturated-fat_100g',
         'nutrient_levels'
     ];
-    
+
 
     const ingredientsFields = [
         'id', 'rank', 'text', 'vegan', 'vegetarian'
@@ -335,21 +336,21 @@ function extractDataFromApiResponse(apiResponse, data) {
     ];
 
     const topLevelFields = [
-        'id', 'lc', 'rev', 'code', 'lang', 'brands', 'labels', 'states', 'stores', 'traces', 
-        'creator', 'editors', 'origins', 'scans_n', 'sortkey', 'checkers', 'complete', 'quantity', 
-        '_keywords', 'additives', 'allergens', 'countries', 'created_t', 'emb_codes', 'image_url', 
-        'informers', 'languages', 'max_imgid', 'packaging', 'categories', 'codes_tags', 'correctors', 
-        'update_key', 'additives_n', 'brands_tags', 'cities_tags', 'completed_t', 'ingredients', 'labels_tags', 
+        'id', 'lc', 'rev', 'code', 'lang', 'brands', 'labels', 'states', 'stores', 'traces',
+        'creator', 'editors', 'origins', 'scans_n', 'sortkey', 'checkers', 'complete', 'quantity',
+        '_keywords', 'additives', 'allergens', 'countries', 'created_t', 'emb_codes', 'image_url',
+        'informers', 'languages', 'max_imgid', 'packaging', 'categories', 'codes_tags', 'correctors',
+        'update_key', 'additives_n', 'brands_tags', 'cities_tags', 'completed_t', 'ingredients', 'labels_tags',
         'last_editor', 'states_tags', 'stores_tags', 'traces_tags', 'editors_tags', 'generic_name', 'last_image_t',
         'origins_tags', 'product_name', 'serving_size', 'checkers_tags', 'ecoscore_tags', 'ingredients_n', 'photographers',
-        'pnns_groups_1', 'pnns_groups_2', 'additives_prev', 'additives_tags', 'allergens_tags', 'countries_tags', 
+        'pnns_groups_1', 'pnns_groups_2', 'additives_prev', 'additives_tags', 'allergens_tags', 'countries_tags',
         'ecoscore_grade', 'emb_codes_orig', 'emb_codes_tags', 'informers_tags', 'languages_tags', 'packaging_tags',
         'unique_scans_n', 'additives_old_n', 'categories_tags', 'correctors_tags', 'expiration_date', 'generic_name_en',
         'image_front_url', 'image_small_url', 'image_thumb_url', 'languages_codes', 'last_modified_t', 'new_additives_n',
         'nutrient_levels', 'product_name_en', 'purchase_places', 'additives_prev_n', 'additives_tags_n', 'entry_dates_tags',
         'ingredients_tags', 'ingredients_text', 'labels_hierarchy', 'labels_prev_tags', 'last_modified_by', 'nutrition_grades',
         'serving_quantity', 'states_hierarchy', 'traces_hierarchy', 'ingredients_debug', 'labels_debug_tags', 'no_nutrition_data',
-        'additives_old_tags', 'emb_codes_20141016', 'ingredients_n_tags', 'nutrition_data_per', 'nutrition_grade_fr', 
+        'additives_old_tags', 'emb_codes_20141016', 'ingredients_n_tags', 'nutrition_data_per', 'nutrition_grade_fr',
         'photographers_tags', 'pnns_groups_1_tags', 'pnns_groups_2_tags', 'additives_prev_tags', 'allergens_hierarchy',
         'countries_hierarchy', 'image_nutrition_url', 'ingredients_text_en', 'languages_hierarchy', 'additives_debug_tags',
         'categories_hierarchy', 'categories_prev_tags', 'image_front_smallURL', 'last_edit_dates_tags', 'manufacturing_places',
@@ -361,7 +362,7 @@ function extractDataFromApiResponse(apiResponse, data) {
         'ingredients_text_with_allergens', 'ingredients_text_with_allergens_en', 'fruits-vegetables-nuts_100g_estimate',
         'ingredients_that_may_be_from_palm_oil_n', 'ingredients_that_may_be_from_palm_oil_tags', 'ingredients_from_or_that_may_be_from_palm_oil_n'
     ];
-    
+
 
     const extractFields = (fields, source) => {
         let result = {};
@@ -383,8 +384,8 @@ function extractDataFromApiResponse(apiResponse, data) {
 
     data.nutriments = extractFields(nutrimentFields, apiResponse.nutriments);
     data.ingredients = extractIngredients(ingredientsFields, apiResponse.ingredients);
-    Object.assign(data, extractFields(topLevelFields, apiResponse));    
-    
+    Object.assign(data, extractFields(topLevelFields, apiResponse));
+
 }
 
 //#endregion
@@ -547,14 +548,14 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         'water': 'WATER',
         'zinc': 'ZN'
     };
- 
+
     // Iterate over the mapping and update data.
     for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
         if (item.nutrients && (item.nutrients[edamamKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
-            data.nutriments[extractedKey] = item.nutrients[edamamKey] || 0; 
+            data.nutriments[extractedKey] = item.nutrients[edamamKey] || 0;
         }
     }
-    
+
     const directFieldMapping = {
         'foodId': 'foodId',  // Not found in topLevelFields
         'label': 'product_name',
@@ -644,29 +645,29 @@ function mergeApiResponseWithUSDAData(apiResponse, data) {
         'calories': 'calories',
         'saturated-fat': 'saturatedFat'
     };
-    
+
     // Iterate over the mapping and update data.
     for (let [extractedKey, usdaKey] of Object.entries(nutrientMapping)) {
         if (item.labelNutrients && item.labelNutrients[usdaKey] && item.labelNutrients[usdaKey].value !== undefined && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
-            data.nutriments[extractedKey] = item.labelNutrients[usdaKey].value || 0; 
+            data.nutriments[extractedKey] = item.labelNutrients[usdaKey].value || 0;
         }
     }
-    
-const directFieldsMapping = {
-    'fdcid': 'id',  // Assuming 'fdcid' is the unique identifier like 'id'
-    'gtinUpc': 'gtinUpc',  // Not found in topLevelFields
-    'dataType': 'dataType',  // Not found in topLevelFields
-    'foodClass': 'foodClass',  // Not found in topLevelFields
-    'brandOwner': 'brands',  // Assuming 'brandOwner' refers to 'brands'
-    'dataSource': 'dataSource',  // Not found in topLevelFields
-    'description': 'description',  // Assuming 'description' might be like 'generic_name'
-    'ingredients': 'ingredients',
-    'servingSize': 'serving_size',
-    'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
-    'discontinuedDate': 'expiration_date',  // Assuming 'discontinuedDate' is like 'expiration_date'
-    'brandedFoodCategory': 'categories',
-    'householdServingFullText': 'serving_size'  // Assuming this refers to the serving quantity
-};
+
+    const directFieldsMapping = {
+        'fdcid': 'id',  // Assuming 'fdcid' is the unique identifier like 'id'
+        'gtinUpc': 'gtinUpc',  // Not found in topLevelFields
+        'dataType': 'dataType',  // Not found in topLevelFields
+        'foodClass': 'foodClass',  // Not found in topLevelFields
+        'brandOwner': 'brands',  // Assuming 'brandOwner' refers to 'brands'
+        'dataSource': 'dataSource',  // Not found in topLevelFields
+        'description': 'description',  // Assuming 'description' might be like 'generic_name'
+        'ingredients': 'ingredients',
+        'servingSize': 'serving_size',
+        'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
+        'discontinuedDate': 'expiration_date',  // Assuming 'discontinuedDate' is like 'expiration_date'
+        'brandedFoodCategory': 'categories',
+        'householdServingFullText': 'serving_size'  // Assuming this refers to the serving quantity
+    };
 
     directFields.forEach(field => {
         const mappedField = directFieldsMapping[field]; // Get the mapped field name
@@ -736,11 +737,11 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         'phosphorus': 'nf_p'
         // ... Add other nutrient mappings as needed
     };
-    
+
     // Iterate over the mapping and update data.
     for (let [extractedKey, nutritionixKey] of Object.entries(nutrientMapping)) {
         if (item && (item[nutritionixKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
-            data.nutriments[extractedKey] = item[nutritionixKey] || 0; 
+            data.nutriments[extractedKey] = item[nutritionixKey] || 0;
         }
     }
 
@@ -803,7 +804,7 @@ function processApiResponseToLabels(productData, apiStatus) {
         const hasMeat = hasBeef || hasPork || hasChicken;
         const hasFish = containsIngredient(productData.ingredients, 'fish');
         const hasRedMeat = hasBeef || hasPork;
-        
+
         // Define a function to check for multiple keywords
         const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
             const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
@@ -874,14 +875,14 @@ function processApiResponseToLabels(productData, apiStatus) {
         };
 
         return result;
-    } 
+    }
     else if ((apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") && productData.ingredients_text && productData.ingredients_text.trim() !== "") {
         //console.log("INGREDIENTS LOWER TEXT IS: " + productData.ingredients_text.toLowerCase());
 
         const containsIngredient = (keyword) => {
             return productData.ingredients_text.toLowerCase().includes(keyword.toLowerCase());
         };
-    
+
         const hasBeef = containsIngredient('beef');
         const hasPork = containsIngredient('pork');
         const hasChicken = containsIngredient('chicken');
@@ -899,15 +900,15 @@ function processApiResponseToLabels(productData, apiStatus) {
             }
             return productData.nutriments.carbohydrates < 10 && productData.nutriments.fat > productData.nutriments.proteins;
         }
-        
+
         function determinePaleo() {
             return !hasMilk && !containsIngredient('dairy') && !containsIngredient('grains') && !containsIngredient('legumes') && !containsIngredient('processed sugar');
         }
-        
+
         function determineMediterranean() {
             return containsIngredient('olive oil') || (hasFish && !containsIngredient('red meat') && !containsIngredient('sugar'));
         }
-        
+
         function determineSugarFree() {
             if (productData.nutriments.sugars === undefined || productData.nutriments.sugars === null) {
                 return false;
@@ -968,9 +969,9 @@ function processApiResponseToLabels(productData, apiStatus) {
             },
             FoodRatings: {
                 ABCDERatings: productData.nutrition_grades || 'Unknown',
-                HighSugarSaltSpecificProducts: productData.nutriments && 
-                ((productData.nutriments.sugar !== undefined && productData.nutriments.sugar > 40) || 
-                 (productData.nutriments.salt !== undefined && productData.nutriments.salt > 40)) ? 'Yes' : 'No'
+                HighSugarSaltSpecificProducts: productData.nutriments &&
+                    ((productData.nutriments.sugar !== undefined && productData.nutriments.sugar > 40) ||
+                        (productData.nutriments.salt !== undefined && productData.nutriments.salt > 40)) ? 'Yes' : 'No'
             },
             CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
         };
