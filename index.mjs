@@ -264,43 +264,51 @@ async function fetchDataAndProcess(barcode) {
     }
 
 
-    // Check if ingredients are still empty and ingredients_text is not empty or null
     // Check if ingredients are still empty and ingredient_text is not empty or null
-    if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
-        // Remove the "CONTAINS LESS THAN 2% OF:" part
-        data.ingredient_text = data.ingredient_text.replace(/^INGREDIENTS:\s*/, '').replace(/CONTAINS LESS THAN 2% OF:/i, '');
+    if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
+        // Remove the "INGREDIENTS:" prefix
+        let cleanedText = data.ingredients_text.replace(/^INGREDIENTS:\s*/, '');
 
         let splitIngredients;
         // Check if ingredient_text contains ';' or ',' and split by it
-        if (data.ingredient_text.includes(';')) {
-            splitIngredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
-        } else if (data.ingredient_text.includes(',')) {
-            splitIngredients = data.ingredient_text.split(',').map(ingredient => ingredient.trim());
+        if (cleanedText.includes(';')) {
+            splitIngredients = cleanedText.split(';').map(ingredient => ingredient.trim());
+        } else if (cleanedText.includes(',')) {
+            splitIngredients = cleanedText.split(',').map(ingredient => ingredient.trim());
         } else {
             // Handle cases with single ingredient
-            splitIngredients = [data.ingredient_text.trim()];
+            splitIngredients = [cleanedText.trim()];
         }
 
-        // Create an object for each ingredient
-        data.ingredients = splitIngredients.map(ingredient => {
-            let percentEstimate;
-            const percentMatch = ingredient.match(/(\d+(\.\d+)?)(?=%)/);
+        let totalSpecifiedPercent = 0;
+        const percentRegex = /CONTAINS LESS THAN (\d+(\.\d+)?)% OF:/i;
 
+        // First pass to calculate total specified percentage and clean up ingredients
+        const ingredientsWithPercents = splitIngredients.map(ingredient => {
+            const percentMatch = ingredient.match(percentRegex);
             if (percentMatch) {
-                // Use the percentage found next to the ingredient
-                percentEstimate = parseFloat(percentMatch[0]);
+                const percent = parseFloat(percentMatch[1]);
+                totalSpecifiedPercent += percent;
+                return {
+                    text: ingredient.replace(percentRegex, '').trim(),
+                    percent_estimate: percent
+                };
             } else {
-                // Calculate a regular percentage estimate
-                percentEstimate = 100 / splitIngredients.length;
+                return { text: ingredient, percent_estimate: null };
             }
+        });
 
-            return {
-                text: ingredient.replace(/(\d+(\.\d+)?%)/, '').trim(), // Remove the percentage from the text
-                percent_estimate: percentEstimate
-            };
+        // Calculate the default percentage for ingredients without specified percent
+        const defaultPercent = (100 - totalSpecifiedPercent) / ingredientsWithPercents.filter(ingredient => ingredient.percent_estimate === null).length;
+
+        // Assign default percent to ingredients without specified percent
+        data.ingredients = ingredientsWithPercents.map(ingredient => {
+            if (ingredient.percent_estimate === null) {
+                ingredient.percent_estimate = defaultPercent;
+            }
+            return ingredient;
         });
     }
-
 
 
     // Sorting nuriments
@@ -685,6 +693,8 @@ function mergeApiResponseWithUSDAData(apiResponse, data) {
         'householdServingFullText': 'serving_size'  // Assuming this refers to the serving quantity
     };
 
+    // Define directFields as the keys of directFieldsMapping
+    const directFields = Object.keys(directFieldsMapping);
     directFields.forEach(field => {
         const mappedField = directFieldsMapping[field]; // Get the mapped field name
         if (mappedField && !data[mappedField] && item[field]) {
