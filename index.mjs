@@ -266,7 +266,10 @@ async function fetchDataAndProcess(barcode) {
         console.error('Error fetching data at Nutritionix:', error);
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
-
+    if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
+        // Split the ingredient_text by ';' and fill up the ingredients array
+        data.ingredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
+    }
     return data;
 }
 
@@ -638,7 +641,7 @@ const directFieldsMapping = {
     'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
     'discontinuedDate': 'expiration_date',  // Assuming 'discontinuedDate' is like 'expiration_date'
     'brandedFoodCategory': 'categories',
-    'householdServingFullText': 'serving_quantity'  // Assuming this refers to the serving quantity
+    'householdServingFullText': 'serving_size'  // Assuming this refers to the serving quantity
 };
 
     directFields.forEach(field => {
@@ -722,7 +725,7 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         'brand_name': 'brands',
         'serving_unit': 'servingSizeUnit',
         'serving_weight_grams': 'serving_size',
-        'nf_metric_qty': 'metricQuantity',
+        'nf_metric_qty': 'serving_size',
         'nf_metric_uom': 'metricUnit',
         'nix_item_name': 'nixItemName',
         'nix_item_id': 'nixItemId',
