@@ -266,11 +266,35 @@ async function fetchDataAndProcess(barcode) {
         console.error('Error fetching data at Nutritionix:', error);
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
-    if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
-        // Split the ingredient_text by ';' and fill up the ingredients array
-        data.ingredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
+
+
+// Check if ingredients are still empty and ingredient_text is not empty or null
+if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
+    let splitIngredients;
+    data.ingredient_text = data.ingredient_text.replace(/^INGREDIENTS:\s*/, '');
+
+    // Check if ingredient_text contains ';' and split by it, otherwise split by ','
+    if (data.ingredient_text.includes(';')) {
+        splitIngredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
+    } else {
+        splitIngredients = data.ingredient_text.split(',').map(ingredient => ingredient.trim());
     }
-    return data;
+
+    // Calculate percent_estimate for each ingredient
+    const percentEstimate = 100 / splitIngredients.length;
+
+    // Create an object for each ingredient with text and percent_estimate properties
+    data.ingredients = splitIngredients.map(ingredient => ({
+        text: ingredient,
+        percent_estimate: percentEstimate
+    }));
+}
+ else
+ {
+    
+ }
+
+ return data;
 }
 
 
@@ -540,7 +564,7 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         'categoryLabel': 'categoryLabel',  // Not found in topLevelFields
         'foodContentsLabel': 'ingredients_text',
         'image': 'image_url',
-        'servingsPerContainer': 'servingsPerContainer'
+        'servingsPerContainer': 'serving_size'
     };
 
 
