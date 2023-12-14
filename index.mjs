@@ -265,26 +265,42 @@ async function fetchDataAndProcess(barcode) {
 
 
     // Check if ingredients are still empty and ingredients_text is not empty or null
-    if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
-        let splitIngredients;
-        data.ingredients_text = data.ingredients_text.replace(/^INGREDIENTS:\s*/, '');
+    // Check if ingredients are still empty and ingredient_text is not empty or null
+    if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
+        // Remove the "CONTAINS LESS THAN 2% OF:" part
+        data.ingredient_text = data.ingredient_text.replace(/^INGREDIENTS:\s*/, '').replace(/CONTAINS LESS THAN 2% OF:/i, '');
 
-        // Check if ingredients_text contains ';' and split by it, otherwise split by ','
-        if (data.ingredients_text.includes(';')) {
-            splitIngredients = data.ingredients_text.split(';').map(ingredient => ingredient.trim());
+        let splitIngredients;
+        // Check if ingredient_text contains ';' or ',' and split by it
+        if (data.ingredient_text.includes(';')) {
+            splitIngredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
+        } else if (data.ingredient_text.includes(',')) {
+            splitIngredients = data.ingredient_text.split(',').map(ingredient => ingredient.trim());
         } else {
-            splitIngredients = data.ingredients_text.split(',').map(ingredient => ingredient.trim());
+            // Handle cases with single ingredient
+            splitIngredients = [data.ingredient_text.trim()];
         }
 
-        // Calculate percent_estimate for each ingredient
-        const percentEstimate = 100 / splitIngredients.length;
+        // Create an object for each ingredient
+        data.ingredients = splitIngredients.map(ingredient => {
+            let percentEstimate;
+            const percentMatch = ingredient.match(/(\d+(\.\d+)?)(?=%)/);
 
-        // Create an object for each ingredient with text and percent_estimate properties
-        data.ingredients = splitIngredients.map(ingredient => ({
-            text: ingredient,
-            percent_estimate: percentEstimate
-        }));
+            if (percentMatch) {
+                // Use the percentage found next to the ingredient
+                percentEstimate = parseFloat(percentMatch[0]);
+            } else {
+                // Calculate a regular percentage estimate
+                percentEstimate = 100 / splitIngredients.length;
+            }
+
+            return {
+                text: ingredient.replace(/(\d+(\.\d+)?%)/, '').trim(), // Remove the percentage from the text
+                percent_estimate: percentEstimate
+            };
+        });
     }
+
 
 
     // Sorting nuriments
