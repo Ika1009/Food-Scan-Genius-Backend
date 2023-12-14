@@ -264,16 +264,16 @@ async function fetchDataAndProcess(barcode) {
     }
 
 
-    // Check if ingredients are still empty and ingredient_text is not empty or null
-    if (data.ingredients.length === 0 && data.ingredient_text && data.ingredient_text.trim() !== '') {
+    // Check if ingredients are still empty and ingredients_text is not empty or null
+    if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
         let splitIngredients;
-        data.ingredient_text = data.ingredient_text.replace(/^INGREDIENTS:\s*/, '');
+        data.ingredients_text = data.ingredients_text.replace(/^INGREDIENTS:\s*/, '');
 
-        // Check if ingredient_text contains ';' and split by it, otherwise split by ','
-        if (data.ingredient_text.includes(';')) {
-            splitIngredients = data.ingredient_text.split(';').map(ingredient => ingredient.trim());
+        // Check if ingredients_text contains ';' and split by it, otherwise split by ','
+        if (data.ingredients_text.includes(';')) {
+            splitIngredients = data.ingredients_text.split(';').map(ingredient => ingredient.trim());
         } else {
-            splitIngredients = data.ingredient_text.split(',').map(ingredient => ingredient.trim());
+            splitIngredients = data.ingredients_text.split(',').map(ingredient => ingredient.trim());
         }
 
         // Calculate percent_estimate for each ingredient
@@ -288,12 +288,12 @@ async function fetchDataAndProcess(barcode) {
 
 
     // Sorting nuriments
-    const sortedPairs = Object.entries(data.nutriments)
-        .filter(([key, value]) => value !== null)
-        .sort((a, b) => b[1] - a[1]);
-    const sortedNutriments = {};
-    for (const [key, value] of sortedPairs) { sortedNutriments[key] = value; }
-    data.nutriments = sortedNutriments;
+    //const sortedPairs = Object.entries(data.nutriments)
+    //    .filter(([key, value]) => value !== null)
+    //    .sort((a, b) => b[1] - a[1]);
+    //const sortedNutriments = {};
+    //for (const [key, value] of sortedPairs) { sortedNutriments[key] = value; }
+    //data.nutriments = sortedNutriments;
 
     return data;
 }
