@@ -264,51 +264,53 @@ async function fetchDataAndProcess(barcode) {
     }
 
 
-    // Check if ingredients are still empty and ingredient_text is not empty or null
-    if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
-        // Remove the "INGREDIENTS:" prefix
-        let cleanedText = data.ingredients_text.replace(/^INGREDIENTS:\s*/, '');
+// Check if ingredients are still empty and ingredient_text is not empty or null
+if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
+    // Remove the "INGREDIENTS:" prefix
+    let cleanedText = data.ingredients_text.replace(/^INGREDIENTS:\s*/, '');
 
-        let splitIngredients;
-        // Check if ingredient_text contains ';' or ',' and split by it
-        if (cleanedText.includes(';')) {
-            splitIngredients = cleanedText.split(';').map(ingredient => ingredient.trim());
-        } else if (cleanedText.includes(',')) {
-            splitIngredients = cleanedText.split(',').map(ingredient => ingredient.trim());
-        } else {
-            // Handle cases with single ingredient
-            splitIngredients = [cleanedText.trim()];
-        }
-
-        let totalSpecifiedPercent = 0;
-        const percentRegex = /CONTAINS LESS THAN (\d+(\.\d+)?)% OF:/i;
-
-        // First pass to calculate total specified percentage and clean up ingredients
-        const ingredientsWithPercents = splitIngredients.map(ingredient => {
-            const percentMatch = ingredient.match(percentRegex);
-            if (percentMatch) {
-                const percent = parseFloat(percentMatch[1]);
-                totalSpecifiedPercent += percent;
-                return {
-                    id: ingredient.replace(percentRegex, '').trim(),
-                    percent_estimate: percent
-                };
-            } else {
-                return { id: ingredient, percent_estimate: null };
-            }
-        });
-
-        // Calculate the default percentage for ingredients without specified percent
-        const defaultPercent = (100 - totalSpecifiedPercent) / ingredientsWithPercents.filter(ingredient => ingredient.percent_estimate === null).length;
-
-        // Assign default percent to ingredients without specified percent
-        data.ingredients = ingredientsWithPercents.map(ingredient => {
-            if (ingredient.percent_estimate === null) {
-                ingredient.percent_estimate = defaultPercent;
-            }
-            return ingredient;
-        });
+    let splitIngredients;
+    // Check if ingredient_text contains ';' or ',' and split by it
+    if (cleanedText.includes(';')) {
+        splitIngredients = cleanedText.split(';').map(ingredient => ingredient.trim());
+    } else if (cleanedText.includes(',')) {
+        splitIngredients = cleanedText.split(',').map(ingredient => ingredient.trim());
+    } else {
+        // Handle cases with single ingredient
+        splitIngredients = [cleanedText.trim()];
     }
+
+    let totalSpecifiedPercent = 0;
+    const percentRegex = /CONTAINS LESS THAN (\d+(\.\d+)?)% OF:/i;
+
+    // First pass to calculate total specified percentage and clean up ingredients
+    const ingredientsWithPercents = splitIngredients.map(ingredient => {
+        const percentMatch = ingredient.match(percentRegex);
+        if (percentMatch) {
+            const percent = parseFloat(percentMatch[1]).toFixed(1);
+            totalSpecifiedPercent += parseFloat(percent);
+            return {
+                id: ingredient.replace(percentRegex, '').trim(),
+                percent_estimate: parseFloat(percent)
+            };
+        } else {
+            return { id: ingredient, percent_estimate: 0 }; // Initialize with a default value
+        }
+    });
+
+    // Calculate the default percentage for ingredients without specified percent
+    let remainingIngredientsCount = ingredientsWithPercents.filter(ingredient => ingredient.percent_estimate === 0).length;
+    const defaultPercent = remainingIngredientsCount > 0 ? parseFloat(((100 - totalSpecifiedPercent) / remainingIngredientsCount).toFixed(1)) : 0;
+
+    // Assign default percent to ingredients without specified percent
+    data.ingredients = ingredientsWithPercents.map(ingredient => {
+        if (ingredient.percent_estimate === 0) {
+            ingredient.percent_estimate = defaultPercent;
+        }
+        return ingredient;
+    });
+}
+
 
 
     // Sorting nuriments
