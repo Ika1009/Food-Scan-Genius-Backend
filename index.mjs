@@ -828,8 +828,13 @@ function processApiResponseToLabels(productData, apiStatus) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
-    if (apiStatus.openFoodFacts === "SUCCESS" && productData.ingredients && Array.isArray(productData.ingredients) && productData.ingredients.length > 0) {
+    if (apiStatus.openFoodFacts === "SUCCESS" && 
+    ((productData.ingredients && Array.isArray(productData.ingredients) && productData.ingredients.length > 0) &&
+    (productData.tags && Array.isArray(productData.tags) && productData.tags.length > 0) &&
+    (productData.keywords && Array.isArray(productData.keywords) && productData.keywords.length > 0) &&
+    (productData.traces && Array.isArray(productData.traces) && productData.traces.length > 0))) {
 
+        console.log(productData.ingredients);
         const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
         const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
         const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
@@ -1080,5 +1085,4 @@ function processApiResponseToLabels(productData, apiStatus) {
         return result;
     }
 }
-
 
