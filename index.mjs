@@ -267,9 +267,9 @@ async function fetchDataAndProcess(barcode) {
     }
 
     // Check if 'ingredients' is a string and not empty
-    if (typeof productData.ingredients === 'string' && productData.ingredients.trim() !== '') {
-        productData.ingredients_text = productData.ingredients;
-        productData.ingredients = [];
+    if (typeof data.ingredients === 'string' && data.ingredients.trim() !== '') {
+        data.ingredients_text = data.ingredients;
+        data.ingredients = [];
     }    
     // Check if ingredients are still empty and ingredient_text is not empty or null
     if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
