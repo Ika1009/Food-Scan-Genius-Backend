@@ -175,7 +175,8 @@ async function fetchDataAndProcess(barcode) {
     // OPEN FOOD FACTS
     try {
         const response = await getProductByBarcode(barcode);
-        if (response && response.product) {
+        if(response && response.product)
+        {
             extractDataFromApiResponse(response.product, data);
             console.log("OPEN FOOD FACTS SUCCESS")
             data.apiStatus.openFoodFacts = 'SUCCESS'; // Mark as successful
@@ -184,7 +185,7 @@ async function fetchDataAndProcess(barcode) {
             data.apiStatus.openFoodFacts = 'ERROR: No product found'; // Mark as error
             console.error('Unexpected API response structure at Open Food Facts:', response);
         }
-    } catch (error) {
+    } catch(error) {
         data.apiStatus.openFoodFacts = 'ERROR: Fetch Failed'; // Mark as error
         console.error('Error fetching product at OPEN FOOD FACTS:', error);
     }
@@ -192,16 +193,18 @@ async function fetchDataAndProcess(barcode) {
     // UPC
     try {
         const upcResponse = await getProductByUPC(barcode);
-        if (upcResponse) {
+        if(upcResponse)
+        {
             mergeApiResponseWithExtractedData(upcResponse, data);
             console.log("UPC SUCCESS")
             data.apiStatus.upc = 'SUCCESS'; // Mark as successful
         }
-        else {
+        else 
+        {
             data.apiStatus.upc = 'ERROR:  No product found'; // Mark as error
             console.error('Unexpected API response structure at UPC:', upcResponse);
         }
-    } catch (error) {
+    } catch(error) {
         data.apiStatus.upc = 'ERROR: Fetch Failed'; // Mark as error
         console.error('Error fetching product at UPC:', error);
     }
@@ -209,27 +212,27 @@ async function fetchDataAndProcess(barcode) {
     // Edamam
     try {
         const edamamResponse = await getProductByEdamam(barcode);
-        if (edamamResponse && edamamResponse.hints[0]) {
+        if (edamamResponse && Array.isArray(edamamResponse.hints) && edamamResponse.hints.length > 0) {
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
             console.log("EDAMAM SUCCESS");
             data.apiStatus.edamam = 'SUCCESS'; // Mark as successful
         } else {
-            console.error('Unexpected API response structure at Edamam:', edamamResponse);
-            data.apiStatus.edamam = 'ERROR:  No product found'; // Mark as error
+            console.error('No product found or changed API structure at Edamam:');
+            data.apiStatus.edamam = 'ERROR: No product found'; // Mark as error
         }
-
     } catch (error) {
         console.error('Error fetching product at Edamam:', error);
         data.apiStatus.edamam = 'ERROR: Fetch Failed'; // Mark as error
     }
-
+    
     //USDA
-    try {
+    try
+    {
         let name = data.product_name;
 
-        if (name) {
+        if(name) {
             const usdaResponse = await USDA_searchFoodByName(name);
-            if (usdaResponse && usdaResponse.foods[0]) {
+            if(usdaResponse && usdaResponse.foods[0]) {
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
                 console.log("USDA SUCCESS")
                 data.apiStatus.usda = 'SUCCESS'; // Mark as successful
@@ -238,11 +241,11 @@ async function fetchDataAndProcess(barcode) {
                 console.error('No product found at USDA:', usdaResponse);
             }
         }
-        else {
+        else{
             data.apiStatus.usda = 'ERROR: No product found'; // Mark as error
             console.error('No product found at USDA:', usdaResponse);
         }
-    } catch (error) {
+    } catch(error) {
         console.error('Error fetching product at USDA:', error);
         data.apiStatus.usda = 'ERROR: Fetch failed'; // Mark as error
     }
@@ -255,10 +258,10 @@ async function fetchDataAndProcess(barcode) {
             console.log("Nutritionix SUCCESS");
             data.apiStatus.nutritionix = 'SUCCESS'; // Mark as successful
         } else {
-            console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
+            console.error('No product found or changed API response structure at Nutritionix:', nutritionixResponse);
             data.apiStatus.nutritionix = 'ERROR: No product found'; // Mark as error
         }
-    } catch (error) {
+    } catch(error) {
         console.error('Error fetching data at Nutritionix:', error);
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
@@ -307,6 +310,8 @@ if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_t
         if (ingredient.percent_estimate === 0) {
             ingredient.percent_estimate = defaultPercent;
         }
+        // Format to one decimal place and parse back to float
+        ingredient.percent_estimate = parseFloat(ingredient.percent_estimate.toFixed(1));
         return ingredient;
     });
 }
@@ -405,12 +410,18 @@ function extractDataFromApiResponse(apiResponse, data) {
     }
 
     const extractIngredients = (fields, source) => {
+        if (!source || !Array.isArray(source)) {
+            return []; // Return an empty array if 'ingredients' doesn't exist or is not an array
+        }
         return source.map(ingredient => extractFields(fields, ingredient));
     }
 
+    // Extract and assign top-level fields first
+    Object.assign(data, extractFields(topLevelFields, apiResponse));
+    
+    // Nutriments and ingredients are extracted after the top-level fields
     data.nutriments = extractFields(nutrimentFields, apiResponse.nutriments);
     data.ingredients = extractIngredients(ingredientsFields, apiResponse.ingredients);
-    Object.assign(data, extractFields(topLevelFields, apiResponse));
 
 }
 
@@ -482,17 +493,17 @@ function mergeApiResponseWithExtractedData(apiResponse, data) {
 
     // Merge top-level fields from UPC API response if they're not in data
     for (const [originalField, customField] of Object.entries(upcItemFieldMapping)) {
-        if (!data[customField] && item[originalField]) {
+        if (!data[customField] && item[originalField] !== undefined) {
             data[customField] = item[originalField];
         }
     }
 
-    // Check if the offers field exists in the UPC API response and merge accordingly
-    if (item.offers) {
+    // Check if the 'offers' field exists in the UPC API response and merge accordingly
+    if (item.offers && Array.isArray(item.offers)) {
         data[upcItemFieldMapping['offers']] = item.offers.map(offer => {
             let offerData = {};
             for (const [originalField, customField] of Object.entries(upcOfferFieldMapping)) {
-                if (offer[originalField]) {
+                if (offer[originalField] !== undefined) {
                     offerData[customField] = offer[originalField];
                 }
             }
@@ -576,12 +587,13 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
     };
 
     // Iterate over the mapping and update data.
-    for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
-        if (item.nutrients && (item.nutrients[edamamKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
-            data.nutriments[extractedKey] = item.nutrients[edamamKey] || 0;
+    if (item.nutrients) {
+        for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
+            if (item.nutrients[edamamKey] !== undefined && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
+                data.nutriments[extractedKey] = item.nutrients[edamamKey];
+            }
         }
     }
-
     const directFieldMapping = {
         'foodId': 'foodId',  // Not found in topLevelFields
         'label': 'product_name',
@@ -596,11 +608,10 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
 
 
     for (const [originalField, customField] of Object.entries(directFieldMapping)) {
-        if (!data[customField] && item[originalField]) {
+        if (!data[customField] && item[originalField] !== undefined) {
             data[customField] = item[originalField];
         }
     }
-
 
     // Handling servingSizes
     // if (!data.servingSizes && item.servingSizes) {
@@ -699,8 +710,8 @@ function mergeApiResponseWithUSDAData(apiResponse, data) {
     const directFields = Object.keys(directFieldsMapping);
     directFields.forEach(field => {
         const mappedField = directFieldsMapping[field]; // Get the mapped field name
-        if (mappedField && !data[mappedField] && item[field]) {
-            data[mappedField] = item[field];
+        if (mappedField && item[field] !== undefined) { // Check if the field exists in item
+            data[mappedField] = item[field] || null;
         }
     });
 
@@ -768,7 +779,7 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
 
     // Iterate over the mapping and update data.
     for (let [extractedKey, nutritionixKey] of Object.entries(nutrientMapping)) {
-        if (item && (item[nutritionixKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
+        if (item[nutritionixKey] !== undefined && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
             data.nutriments[extractedKey] = item[nutritionixKey] || 0;
         }
     }
@@ -798,13 +809,12 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         'nf_ingredient_statement': 'ingredients_text'
     };
 
+
     for (const [originalField, customField] of Object.entries(directFieldMapping)) {
-        if (!data[customField] && item[originalField]) {
+        if (item[originalField] !== undefined && (data[customField] === null || data[customField] === undefined)) {
             data[customField] = item[originalField];
         }
     }
-
-
 }
 
 
@@ -814,7 +824,7 @@ function processApiResponseToLabels(productData, apiStatus) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
-    if (apiStatus.openFoodFacts === "SUCCESS") {
+    if (apiStatus.openFoodFacts === "SUCCESS" && productData.ingredients && Array.isArray(productData.ingredients)) {
 
         const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
         const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';

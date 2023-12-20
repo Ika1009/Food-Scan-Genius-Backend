@@ -12,10 +12,10 @@ async function fetchDataAndProcess(barcode) {
         const response = await getProductByBarcode(barcode);
         if(response && response.product)
         {
+            data.responses.openFoodFacts = response;
             extractDataFromApiResponse(response.product, data);
             console.log("OPEN FOOD FACTS SUCCESS")
             data.apiStatus.openFoodFacts = 'SUCCESS'; // Mark as successful
-            data.responses.openFoodFacts = response.product;
         }
         else {
             data.apiStatus.openFoodFacts = 'ERROR: No product found'; // Mark as error
@@ -31,10 +31,10 @@ async function fetchDataAndProcess(barcode) {
         const upcResponse = await getProductByUPC(barcode);
         if(upcResponse)
         {
+            data.responses.upc = upcResponse;
             mergeApiResponseWithExtractedData(upcResponse, data);
             console.log("UPC SUCCESS")
             data.apiStatus.upc = 'SUCCESS'; // Mark as successful
-            data.responses.upc = upcResponse;
         }
         else 
         {
@@ -49,21 +49,20 @@ async function fetchDataAndProcess(barcode) {
     // Edamam
     try {
         const edamamResponse = await getProductByEdamam(barcode);
-        if(edamamResponse && edamamResponse.hints[0]) {
+        if (edamamResponse && Array.isArray(edamamResponse.hints) && edamamResponse.hints.length > 0) {
+            data.responses.edamamResponse = edamamResponse.hints[0];
             mergeApiResponseWithEdamamData(edamamResponse.hints[0], data);
             console.log("EDAMAM SUCCESS");
             data.apiStatus.edamam = 'SUCCESS'; // Mark as successful
-            data.responses.edamamResponse = edamamResponse.hints[0];
         } else {
-            console.error('Unexpected API response structure at Edamam:', edamamResponse);
-            data.apiStatus.edamam = 'ERROR:  No product found'; // Mark as error
+            console.error('No product found or changed API structure at Edamam:');
+            data.apiStatus.edamam = 'ERROR: No product found'; // Mark as error
         }
-
-    } catch(error) {
+    } catch (error) {
         console.error('Error fetching product at Edamam:', error);
         data.apiStatus.edamam = 'ERROR: Fetch Failed'; // Mark as error
     }
-
+    
     //USDA
     try
     {
@@ -72,10 +71,10 @@ async function fetchDataAndProcess(barcode) {
         if(name) {
             const usdaResponse = await USDA_searchFoodByName(name);
             if(usdaResponse && usdaResponse.foods[0]) {
+                data.responses.usda = usdaResponse.foods[0];
                 mergeApiResponseWithUSDAData(usdaResponse.foods[0], data);
                 console.log("USDA SUCCESS")
                 data.apiStatus.usda = 'SUCCESS'; // Mark as successful
-                data.responses.usda = usdaResponse.foods[0];
             } else {
                 data.apiStatus.usda = 'ERROR: No product found'; // Mark as error
                 console.error('No product found at USDA:', usdaResponse);
@@ -94,18 +93,69 @@ async function fetchDataAndProcess(barcode) {
     try {
         const nutritionixResponse = await getProductByNutritionix(barcode);
         if (nutritionixResponse && nutritionixResponse.foods) {
+            data.responses.nutritionix = nutritionixResponse.foods;
             mergeApiResponseWithNutritionixData(nutritionixResponse, data);
             console.log("Nutritionix SUCCESS");
             data.apiStatus.nutritionix = 'SUCCESS'; // Mark as successful
-            data.responses.nutritionix = nutritionixResponse.foods;
         } else {
-            console.error('Unexpected API response structure at Nutritionix:', nutritionixResponse);
+            console.error('No product found or changed API response structure at Nutritionix:', nutritionixResponse);
             data.apiStatus.nutritionix = 'ERROR: No product found'; // Mark as error
         }
     } catch(error) {
         console.error('Error fetching data at Nutritionix:', error);
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
+
+        
+    // Check if ingredients are still empty and ingredient_text is not empty or null
+    if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
+        // Remove the "INGREDIENTS:" prefix
+        let cleanedText = data.ingredients_text.replace(/^INGREDIENTS:\s*/, '');
+
+        let splitIngredients;
+        // Check if ingredient_text contains ';' or ',' and split by it
+        if (cleanedText.includes(';')) {
+            splitIngredients = cleanedText.split(';').map(ingredient => ingredient.trim());
+        } else if (cleanedText.includes(',')) {
+            splitIngredients = cleanedText.split(',').map(ingredient => ingredient.trim());
+        } else {
+            // Handle cases with single ingredient
+            splitIngredients = [cleanedText.trim()];
+        }
+
+        let totalSpecifiedPercent = 0;
+        const percentRegex = /CONTAINS LESS THAN (\d+(\.\d+)?)% OF:/i;
+
+        // First pass to calculate total specified percentage and clean up ingredients
+        const ingredientsWithPercents = splitIngredients.map(ingredient => {
+            const percentMatch = ingredient.match(percentRegex);
+            if (percentMatch) {
+                const percent = parseFloat(percentMatch[1]).toFixed(1);
+                totalSpecifiedPercent += parseFloat(percent);
+                return {
+                    id: ingredient.replace(percentRegex, '').trim(),
+                    percent_estimate: parseFloat(percent)
+                };
+            } else {
+                return { id: ingredient, percent_estimate: 0 }; // Initialize with a default value
+            }
+        });
+
+        // Calculate the default percentage for ingredients without specified percent
+        let remainingIngredientsCount = ingredientsWithPercents.filter(ingredient => ingredient.percent_estimate === 0).length;
+        const defaultPercent = remainingIngredientsCount > 0 ? parseFloat(((100 - totalSpecifiedPercent) / remainingIngredientsCount).toFixed(1)) : 0;
+
+        // Assign default percent to ingredients without specified percent
+        data.ingredients = ingredientsWithPercents.map(ingredient => {
+            if (ingredient.percent_estimate === 0) {
+                ingredient.percent_estimate = defaultPercent;
+            }
+            // Format to one decimal place and parse back to float
+            ingredient.percent_estimate = parseFloat(ingredient.percent_estimate.toFixed(1));
+            return ingredient;
+        });
+    }
+
     fs.appendFile('testing.txt', JSON.stringify(data, null, 2) + "\nanalysis", (err) => {
         if (err) {
             console.error('Error appending to file:', err);
@@ -129,8 +179,12 @@ fs.writeFile('testing.txt', '', (err) => {
 
 });
 
-fetchDataAndProcess(27000612323);
-fetchDataAndProcess(5000159461122);
+//fetchDataAndProcess(27000612323);
+//fetchDataAndProcess(5000159461122);
+fetchDataAndProcess(8433329103220);
+
+//#endregion
+
 
 //#region OPEN FOOD FACTS
 // Example: https://world.openfoodfacts.net/api/v2/product/3017624010701
@@ -152,16 +206,16 @@ async function getProductByBarcode(barcode) {
 
 function extractDataFromApiResponse(apiResponse, data) {
     const nutrimentFields = [
-        'fat', 'iron', 'salt', 'fiber', 'energy', 'sodium', 'sugars', 'alcohol', 'calcium', 
-        'fat_unit', 'proteins', 'iron_unit', 'salt_unit', 'trans-fat', 'vitamin-a', 'vitamin-c', 
-        'fiber_unit', 'iron_label', 'nova-group', 'energy_unit', 'sodium_unit', 'sugars_unit', 
-        'alcohol_unit', 'calcium_unit', 'carbohydrates', 'proteins_unit', 'saturated-fat', 
-        'energy_serving', 'potassium_100g', 'trans-fat_unit', 'vitamin-a_unit', 'vitamin-c_unit', 
-        'alcohol_serving', 'energy-kcal', 'energy-kcal_unit', 'carbohydrates_unit', 'nutrition-score-fr', 
-        'nutrition-score-uk', 'saturated-fat_unit', 'monounsaturated-fat_100g', 'polyunsaturated-fat_100g', 
+        'fat', 'iron', 'salt', 'fiber', 'energy', 'sodium', 'sugars', 'alcohol', 'calcium',
+        'fat_unit', 'proteins', 'iron_unit', 'salt_unit', 'trans-fat', 'vitamin-a', 'vitamin-c',
+        'fiber_unit', 'iron_label', 'nova-group', 'energy_unit', 'sodium_unit', 'sugars_unit',
+        'alcohol_unit', 'calcium_unit', 'carbohydrates', 'proteins_unit', 'saturated-fat',
+        'energy_serving', 'potassium_100g', 'trans-fat_unit', 'vitamin-a_unit', 'vitamin-c_unit',
+        'alcohol_serving', 'energy-kcal', 'energy-kcal_unit', 'carbohydrates_unit', 'nutrition-score-fr',
+        'nutrition-score-uk', 'saturated-fat_unit', 'monounsaturated-fat_100g', 'polyunsaturated-fat_100g',
         'nutrient_levels'
     ];
-    
+
 
     const ingredientsFields = [
         'id', 'rank', 'text', 'vegan', 'vegetarian'
@@ -169,21 +223,21 @@ function extractDataFromApiResponse(apiResponse, data) {
     ];
 
     const topLevelFields = [
-        'id', 'lc', 'rev', 'code', 'lang', 'brands', 'labels', 'states', 'stores', 'traces', 
-        'creator', 'editors', 'origins', 'scans_n', 'sortkey', 'checkers', 'complete', 'quantity', 
-        '_keywords', 'additives', 'allergens', 'countries', 'created_t', 'emb_codes', 'image_url', 
-        'informers', 'languages', 'max_imgid', 'packaging', 'categories', 'codes_tags', 'correctors', 
-        'update_key', 'additives_n', 'brands_tags', 'cities_tags', 'completed_t', 'ingredients', 'labels_tags', 
+        'id', 'lc', 'rev', 'code', 'lang', 'brands', 'labels', 'states', 'stores', 'traces',
+        'creator', 'editors', 'origins', 'scans_n', 'sortkey', 'checkers', 'complete', 'quantity',
+        '_keywords', 'additives', 'allergens', 'countries', 'created_t', 'emb_codes', 'image_url',
+        'informers', 'languages', 'max_imgid', 'packaging', 'categories', 'codes_tags', 'correctors',
+        'update_key', 'additives_n', 'brands_tags', 'cities_tags', 'completed_t', 'ingredients', 'labels_tags',
         'last_editor', 'states_tags', 'stores_tags', 'traces_tags', 'editors_tags', 'generic_name', 'last_image_t',
         'origins_tags', 'product_name', 'serving_size', 'checkers_tags', 'ecoscore_tags', 'ingredients_n', 'photographers',
-        'pnns_groups_1', 'pnns_groups_2', 'additives_prev', 'additives_tags', 'allergens_tags', 'countries_tags', 
+        'pnns_groups_1', 'pnns_groups_2', 'additives_prev', 'additives_tags', 'allergens_tags', 'countries_tags',
         'ecoscore_grade', 'emb_codes_orig', 'emb_codes_tags', 'informers_tags', 'languages_tags', 'packaging_tags',
         'unique_scans_n', 'additives_old_n', 'categories_tags', 'correctors_tags', 'expiration_date', 'generic_name_en',
         'image_front_url', 'image_small_url', 'image_thumb_url', 'languages_codes', 'last_modified_t', 'new_additives_n',
         'nutrient_levels', 'product_name_en', 'purchase_places', 'additives_prev_n', 'additives_tags_n', 'entry_dates_tags',
         'ingredients_tags', 'ingredients_text', 'labels_hierarchy', 'labels_prev_tags', 'last_modified_by', 'nutrition_grades',
         'serving_quantity', 'states_hierarchy', 'traces_hierarchy', 'ingredients_debug', 'labels_debug_tags', 'no_nutrition_data',
-        'additives_old_tags', 'emb_codes_20141016', 'ingredients_n_tags', 'nutrition_data_per', 'nutrition_grade_fr', 
+        'additives_old_tags', 'emb_codes_20141016', 'ingredients_n_tags', 'nutrition_data_per', 'nutrition_grade_fr',
         'photographers_tags', 'pnns_groups_1_tags', 'pnns_groups_2_tags', 'additives_prev_tags', 'allergens_hierarchy',
         'countries_hierarchy', 'image_nutrition_url', 'ingredients_text_en', 'languages_hierarchy', 'additives_debug_tags',
         'categories_hierarchy', 'categories_prev_tags', 'image_front_smallURL', 'last_edit_dates_tags', 'manufacturing_places',
@@ -195,7 +249,7 @@ function extractDataFromApiResponse(apiResponse, data) {
         'ingredients_text_with_allergens', 'ingredients_text_with_allergens_en', 'fruits-vegetables-nuts_100g_estimate',
         'ingredients_that_may_be_from_palm_oil_n', 'ingredients_that_may_be_from_palm_oil_tags', 'ingredients_from_or_that_may_be_from_palm_oil_n'
     ];
-    
+
 
     const extractFields = (fields, source) => {
         let result = {};
@@ -212,13 +266,19 @@ function extractDataFromApiResponse(apiResponse, data) {
     }
 
     const extractIngredients = (fields, source) => {
+        if (!source || !Array.isArray(source)) {
+            return []; // Return an empty array if 'ingredients' doesn't exist or is not an array
+        }
         return source.map(ingredient => extractFields(fields, ingredient));
     }
 
+    // Extract and assign top-level fields first
+    Object.assign(data, extractFields(topLevelFields, apiResponse));
+    
+    // Nutriments and ingredients are extracted after the top-level fields
     data.nutriments = extractFields(nutrimentFields, apiResponse.nutriments);
     data.ingredients = extractIngredients(ingredientsFields, apiResponse.ingredients);
-    Object.assign(data, extractFields(topLevelFields, apiResponse));    
-    
+
 }
 
 //#endregion
@@ -246,6 +306,13 @@ async function getProductByUPC(barcode) {
     }
 }
 function mergeApiResponseWithExtractedData(apiResponse, data) {
+
+    if (!apiResponse.items || !Array.isArray(apiResponse.items) || apiResponse.items.length === 0) {
+        console.log('No items found in UPC API response:', apiResponse);
+        data.apiStatus.upc = 'ERROR:  No product found'; // Mark as error
+        return; // Exit early if no items are present
+    }
+
     // Fields from the UPC API response and their mappings to custom variable names
     const upcItemFieldMapping = {
         'ean': 'ean',  // Not found in topLevelFields
@@ -289,17 +356,17 @@ function mergeApiResponseWithExtractedData(apiResponse, data) {
 
     // Merge top-level fields from UPC API response if they're not in data
     for (const [originalField, customField] of Object.entries(upcItemFieldMapping)) {
-        if (!data[customField] && item[originalField]) {
+        if (item[originalField] !== undefined) {
             data[customField] = item[originalField];
         }
     }
 
-    // Check if the offers field exists in the UPC API response and merge accordingly
-    if (item.offers) {
+    // Check if the 'offers' field exists in the UPC API response and merge accordingly
+    if (item.offers && Array.isArray(item.offers)) {
         data[upcItemFieldMapping['offers']] = item.offers.map(offer => {
             let offerData = {};
             for (const [originalField, customField] of Object.entries(upcOfferFieldMapping)) {
-                if (offer[originalField]) {
+                if (offer[originalField] !== undefined) {
                     offerData[customField] = offer[originalField];
                 }
             }
@@ -339,6 +406,7 @@ async function getProductByEdamam(barcode) {
         }
     } catch (error) {
         console.error('Error at Edamam:', error.message);
+        return error;
     }
 }
 
@@ -381,14 +449,15 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         'water': 'WATER',
         'zinc': 'ZN'
     };
- 
+
     // Iterate over the mapping and update data.
-    for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
-        if (item.nutrients && (item.nutrients[edamamKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
-            data.nutriments[extractedKey] = item.nutrients[edamamKey] || 0; 
+    if (item.nutrients) {
+        for (let [extractedKey, edamamKey] of Object.entries(nutrientMapping)) {
+            if (item.nutrients[edamamKey] !== undefined && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
+                data.nutriments[extractedKey] = item.nutrients[edamamKey];
+            }
         }
     }
-    
     const directFieldMapping = {
         'foodId': 'foodId',  // Not found in topLevelFields
         'label': 'product_name',
@@ -398,16 +467,15 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
         'categoryLabel': 'categoryLabel',  // Not found in topLevelFields
         'foodContentsLabel': 'ingredients_text',
         'image': 'image_url',
-        'servingsPerContainer': 'servingsPerContainer'
+        'servingsPerContainer': 'serving_size'
     };
 
 
     for (const [originalField, customField] of Object.entries(directFieldMapping)) {
-        if (!data[customField] && item[originalField]) {
+        if (!data[customField] && item[originalField] !== undefined) {
             data[customField] = item[originalField];
         }
     }
-
 
     // Handling servingSizes
     // if (!data.servingSizes && item.servingSizes) {
@@ -478,34 +546,36 @@ function mergeApiResponseWithUSDAData(apiResponse, data) {
         'calories': 'calories',
         'saturated-fat': 'saturatedFat'
     };
-    
+
     // Iterate over the mapping and update data.
     for (let [extractedKey, usdaKey] of Object.entries(nutrientMapping)) {
         if (item.labelNutrients && item.labelNutrients[usdaKey] && item.labelNutrients[usdaKey].value !== undefined && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
-            data.nutriments[extractedKey] = item.labelNutrients[usdaKey].value || 0; 
+            data.nutriments[extractedKey] = item.labelNutrients[usdaKey].value || 0;
         }
     }
-    
-const directFieldsMapping = {
-    'fdcid': 'id',  // Assuming 'fdcid' is the unique identifier like 'id'
-    'gtinUpc': 'gtinUpc',  // Not found in topLevelFields
-    'dataType': 'dataType',  // Not found in topLevelFields
-    'foodClass': 'foodClass',  // Not found in topLevelFields
-    'brandOwner': 'brands',  // Assuming 'brandOwner' refers to 'brands'
-    'dataSource': 'dataSource',  // Not found in topLevelFields
-    'description': 'description',  // Assuming 'description' might be like 'generic_name'
-    'ingredients': 'ingredients',
-    'servingSize': 'serving_size',
-    'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
-    'discontinuedDate': 'expiration_date',  // Assuming 'discontinuedDate' is like 'expiration_date'
-    'brandedFoodCategory': 'categories',
-    'householdServingFullText': 'serving_quantity'  // Assuming this refers to the serving quantity
-};
 
+    const directFieldsMapping = {
+        'fdcid': 'id',  // Assuming 'fdcid' is the unique identifier like 'id'
+        'gtinUpc': 'gtinUpc',  // Not found in topLevelFields
+        'dataType': 'dataType',  // Not found in topLevelFields
+        'foodClass': 'foodClass',  // Not found in topLevelFields
+        'brandOwner': 'brands',  // Assuming 'brandOwner' refers to 'brands'
+        'dataSource': 'dataSource',  // Not found in topLevelFields
+        'description': 'description',  // Assuming 'description' might be like 'generic_name'
+        'ingredients': 'ingredients',
+        'servingSize': 'serving_size',
+        'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
+        'discontinuedDate': 'expiration_date',  // Assuming 'discontinuedDate' is like 'expiration_date'
+        'brandedFoodCategory': 'categories',
+        'householdServingFullText': 'serving_size'  // Assuming this refers to the serving quantity
+    };
+
+    // Define directFields as the keys of directFieldsMapping
+    const directFields = Object.keys(directFieldsMapping);
     directFields.forEach(field => {
         const mappedField = directFieldsMapping[field]; // Get the mapped field name
-        if (mappedField && !data[mappedField] && item[field]) {
-            data[mappedField] = item[field];
+        if (mappedField && item[field] !== undefined) { // Check if the field exists in item
+            data[mappedField] = item[field] || null;
         }
     });
 
@@ -570,11 +640,11 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         'phosphorus': 'nf_p'
         // ... Add other nutrient mappings as needed
     };
-    
+
     // Iterate over the mapping and update data.
     for (let [extractedKey, nutritionixKey] of Object.entries(nutrientMapping)) {
-        if (item && (item[nutritionixKey] !== undefined) && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
-            data.nutriments[extractedKey] = item[nutritionixKey] || 0; 
+        if (item[nutritionixKey] !== undefined && (data.nutriments[extractedKey] === null || data.nutriments[extractedKey] === undefined)) {
+            data.nutriments[extractedKey] = item[nutritionixKey] || 0;
         }
     }
 
@@ -583,7 +653,7 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         'brand_name': 'brands',
         'serving_unit': 'servingSizeUnit',
         'serving_weight_grams': 'serving_size',
-        'nf_metric_qty': 'metricQuantity',
+        'nf_metric_qty': 'serving_size',
         'nf_metric_uom': 'metricUnit',
         'nix_item_name': 'nixItemName',
         'nix_item_id': 'nixItemId',
@@ -603,129 +673,271 @@ function mergeApiResponseWithNutritionixData(apiResponse, data) {
         'nf_ingredient_statement': 'ingredients_text'
     };
 
+
     for (const [originalField, customField] of Object.entries(directFieldMapping)) {
-        if (!data[customField] && item[originalField]) {
+        if (item[originalField] !== undefined && (data[customField] === null || data[customField] === undefined)) {
             data[customField] = item[originalField];
         }
     }
-
-
 }
 
 
 //#endregion
 
-
-
 function processApiResponseToLabels(productData, apiStatus) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
+    if (apiStatus.openFoodFacts === "SUCCESS" && productData.ingredients && Array.isArray(productData.ingredients)) {
 
-    // Determine the source of ingredients based on API status
-    let ingredientsSource;
-    if (apiStatus.openFoodFacts === "SUCCESS") {
-        ingredientsSource = productData.ingredients;
-    } else if (apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") {
-        ingredientsSource = productData.ingredients_text;
+        const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
+        const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
+        const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
+        const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
+
+        const hasBeef = containsIngredient(productData.ingredients, 'beef');
+        const hasPork = containsIngredient(productData.ingredients, 'pork');
+        const hasChicken = containsIngredient(productData.ingredients, 'chicken');
+        const hasMilk = containsIngredient(productData.ingredients, 'milk');
+        const hasEgg = containsIngredient(productData.ingredients, 'egg');
+        const hasOnion = containsIngredient(productData.ingredients, 'onion');
+        const hasGarlic = containsIngredient(productData.ingredients, 'garlic');
+        const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
+        const hasMeat = hasBeef || hasPork || hasChicken;
+        const hasFish = containsIngredient(productData.ingredients, 'fish');
+        const hasRedMeat = hasBeef || hasPork;
+
+        // Define a function to check for multiple keywords
+        const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
+            const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
+            const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
+            const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
+
+            if (checkTag) return 'Yes';
+            if (checkIngredient) return 'Yes';
+            if (checkTrace) return 'Traces';
+            return 'No';
+        };
+
+        const result = {
+            BarCodeNum: productData.code || productData.ean,
+            TimeStamp: productData.last_modified_t,
+            Allergens: {
+                celery: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['celery']),
+                cereals_containing_gluten: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['cereals-containing-gluten', 'wheat', 'rye', 'barley', 'oats']),
+                crustaceans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['crustaceans', 'prawns', 'crab', 'lobster']),
+                eggs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['eggs', 'egg']),
+                fish: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['fish']),
+                lupin: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['lupin']),
+                milk: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['milk']),
+                molluscs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['molluscs', 'squid', 'mussels', 'cockles', 'whelks', 'snails']),
+                mustard: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['mustard']),
+                nuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['nuts']),
+                peanuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['peanuts']),
+                sesame_seeds: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sesame-seeds', 'sesame']),
+                soya_beans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['soya-beans', 'soya']),
+                sulphur_dioxide: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sulphur-dioxide', 'sulphur', 'sulphites'])
+            },
+            LifestyleChoices: {
+                Vegan: !hasAnimalProducts && productData.ingredients && productData.ingredients.every(i => i.vegan === 'yes') ? 'Yes' : 'No',
+                LactoVegetarian: hasMilk && !hasMeat && !hasFish ? 'Yes' : 'No',
+                OvoVegetarian: hasEgg && !hasMeat && !hasFish ? 'Yes' : 'No',
+                LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish ? 'Yes' : 'No',
+                Pescatarian: hasFish && !hasMeat ? 'Yes' : 'No',
+                WhiteMeatOnly: hasChicken && !hasRedMeat ? 'Yes' : 'No',
+                RedMeatOnly: hasRedMeat && !hasChicken ? 'Yes' : 'No',
+            },
+            ReligiousRestrictions: {
+                Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
+                Kosher: containsTag(productData.labels_tags, 'kosher') || 'Unknown',
+                Beef: hasBeef ? 'Yes' : 'No',
+                Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
+                Onion: hasOnion ? 'Yes' : 'No',
+            },
+            DietChoice: {
+                Keto: containsKeyword(productData._keywords, 'keto'),
+                Paleo: containsKeyword(productData._keywords, 'paleo'),
+                Mediterranean: containsKeyword(productData._keywords, 'mediterranean'),
+                SugarFree: containsKeyword(productData._keywords, 'sugar-free')
+            },
+            SustainabilityChoices: {
+                Local: containsTag(productData.labels_tags, 'local'),
+                Organic: containsTag(productData.labels_tags, 'organic'),
+                GeneticallyModified: containsTag(productData.labels_tags, 'gmo')
+            },
+            Packaging: {
+                FullyRecycled: containsTag(productData.packaging_tags, 'fully-recycled'),
+                PartRecycled: containsTag(productData.packaging_tags, 'part-recycled')
+            },
+            FoodRatings: {
+                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
+            },
+            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
+        };
+
+        return result;
     }
+    else if ((apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") && productData.ingredients_text && productData.ingredients_text.trim() !== "") {
+        //console.log("INGREDIENTS LOWER TEXT IS: " + productData.ingredients_text.toLowerCase());
 
-    const containsIngredient = (ingredients, keyword) => {
-        if (Array.isArray(ingredients)) {
-            // If ingredients is an array of objects
-            return ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
-        } else if (typeof ingredients === 'string') {
-            // If ingredients is a string
-            return ingredients.toLowerCase().includes(keyword);
+        const containsIngredient = (keyword) => {
+            return productData.ingredients_text.toLowerCase().includes(keyword.toLowerCase());
+        };
+
+        const hasBeef = containsIngredient('beef');
+        const hasPork = containsIngredient('pork');
+        const hasChicken = containsIngredient('chicken');
+        const hasMilk = containsIngredient('milk');
+        const hasEgg = containsIngredient('eggs') || containsIngredient('egg');
+        const hasOnion = containsIngredient('onion');
+        const hasGarlic = containsIngredient('garlic');
+        const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
+        const hasMeat = hasBeef || hasPork || hasChicken;
+        const hasFish = containsIngredient('fish');
+        const hasRedMeat = hasBeef || hasPork;
+        function determineKeto() {
+            if (productData.nutriments.carbohydrates === undefined || productData.nutriments.carbohydrates === null) {
+                return false;
+            }
+            return productData.nutriments.carbohydrates < 10 && productData.nutriments.fat > productData.nutriments.proteins;
         }
-        return false;
-    };
-    const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
-    const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
-    const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
 
-    const hasBeef = containsIngredient(productData.ingredients, 'beef');
-    const hasPork = containsIngredient(productData.ingredients, 'pork');
-    const hasChicken = containsIngredient(productData.ingredients, 'chicken');
-    const hasMilk = containsIngredient(productData.ingredients, 'milk');
-    const hasEgg = containsIngredient(productData.ingredients, 'egg');
-    const hasOnion = containsIngredient(productData.ingredients, 'onion');
-    const hasGarlic = containsIngredient(productData.ingredients, 'garlic');
-    const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
-    const hasMeat = hasBeef || hasPork || hasChicken;
-    const hasFish = containsIngredient(productData.ingredients, 'fish');
-    const hasRedMeat = hasBeef || hasPork;
-    
-    // Define a function to check for multiple keywords
-    const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
-        const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
-        const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
-        const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
+        function determinePaleo() {
+            return !hasMilk && !containsIngredient('dairy') && !containsIngredient('grains') && !containsIngredient('legumes') && !containsIngredient('processed sugar');
+        }
 
-        if (checkTag) return 'Yes';
-        if (checkIngredient) return 'Yes';
-        if (checkTrace) return 'Traces';
-        return 'No';
-    };
+        function determineMediterranean() {
+            return containsIngredient('olive oil') || (hasFish && !containsIngredient('red meat') && !containsIngredient('sugar'));
+        }
 
-    const result = {
-        BarCodeNum: productData.code || productData.ean,
-        TimeStamp: productData.last_modified_t,
-        Allergens: {
-            celery: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['celery']),
-            cereals_containing_gluten: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['cereals-containing-gluten', 'wheat', 'rye', 'barley', 'oats']),
-            crustaceans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['crustaceans', 'prawns', 'crab', 'lobster']),
-            eggs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['eggs', 'egg']),
-            fish: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['fish']),
-            lupin: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['lupin']),
-            milk: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['milk']),
-            molluscs: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['molluscs', 'squid', 'mussels', 'cockles', 'whelks', 'snails']),
-            mustard: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['mustard']),
-            nuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['nuts']),
-            peanuts: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['peanuts']),
-            sesame_seeds: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sesame-seeds', 'sesame']),
-            soya_beans: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['soya-beans', 'soya']),
-            sulphur_dioxide: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sulphur-dioxide', 'sulphur', 'sulphites'])
-        },
-        LifestyleChoices: {
-            Vegan: !hasAnimalProducts && productData.ingredients && productData.ingredients.every(i => i.vegan === 'yes') ? 'Yes' : 'No',
-            LactoVegetarian: hasMilk && !hasMeat && !hasFish ? 'Yes' : 'No',
-            OvoVegetarian: hasEgg && !hasMeat && !hasFish ? 'Yes' : 'No',
-            LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish ? 'Yes' : 'No',
-            Pescatarian: hasFish && !hasMeat ? 'Yes' : 'No',
-            WhiteMeatOnly: hasChicken && !hasRedMeat ? 'Yes' : 'No',
-            RedMeatOnly: hasRedMeat && !hasChicken ? 'Yes' : 'No',
-        },
-        ReligiousRestrictions: {
-            Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
-            Kosher: containsTag(productData.labels_tags, 'kosher') || 'Unknown',
-            Beef: hasBeef ? 'Yes' : 'No',
-            Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
-            Onion: hasOnion ? 'Yes' : 'No',
-        },
-        DietChoice: {
-            Keto: containsKeyword(productData._keywords, 'keto'),
-            Paleo: containsKeyword(productData._keywords, 'paleo'),
-            Mediterranean: containsKeyword(productData._keywords, 'mediterranean'),
-            SugarFree: containsKeyword(productData._keywords, 'sugar-free')
-        },
-        SustainabilityChoices: {
-            Local: containsTag(productData.labels_tags, 'local'),
-            Organic: containsTag(productData.labels_tags, 'organic'),
-            GeneticallyModified: containsTag(productData.labels_tags, 'gmo')
-        },
-        Packaging: {
-            FullyRecycled: containsTag(productData.packaging_tags, 'fully-recycled'),
-            PartRecycled: containsTag(productData.packaging_tags, 'part-recycled')
-        },
-        FoodRatings: {
-            ABCDERatings: productData.nutrition_grades || 'Unknown',
-            HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
-        },
-        CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
-    };
+        function determineSugarFree() {
+            if (productData.nutriments.sugars === undefined || productData.nutriments.sugars === null) {
+                return false;
+            }
+            return productData.nutriments.sugars === 0;
+        }
 
-    return result;
+        const result = {
+            BarCodeNum: productData.code || productData.ean,
+            TimeStamp: productData.last_modified_t,
+            Allergens: {
+                celery: containsIngredient('celery'),
+                cereals_containing_gluten: containsIngredient('wheat') || containsIngredient('rye') || containsIngredient('barley') || containsIngredient('oats'),
+                crustaceans: containsIngredient('crustaceans') || containsIngredient('prawns') || containsIngredient('crab') || containsIngredient('lobster'),
+                eggs: hasEgg,
+                fish: hasFish,
+                lupin: containsIngredient('lupin'),
+                hasMilk: hasMilk,
+                molluscs: containsIngredient('molluscs') || containsIngredient('squid') || containsIngredient('mussels') || containsIngredient('cockles') || containsIngredient('whelks') || containsIngredient('snails'),
+                mustard: containsIngredient('mustard'),
+                nuts: containsIngredient('nuts'),
+                peanuts: containsIngredient('peanuts'),
+                sesame_seeds: containsIngredient('sesame-seeds') || containsIngredient('sesame'),
+                soya_beans: containsIngredient('soya-beans') || containsIngredient('soya'),
+                sulphur_dioxide: containsIngredient('sulphur-dioxide') || containsIngredient('sulphur') || containsIngredient('sulphites')
+            },
+            LifestyleChoices: {
+                Vegan: !hasAnimalProducts,
+                LactoVegetarian: hasMilk && !hasMeat && !hasFish,
+                OvoVegetarian: hasEgg && !hasMeat && !hasFish,
+                LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish,
+                Pescatarian: hasFish && !hasMeat,
+                WhiteMeatOnly: hasChicken && !hasRedMeat,
+                RedMeatOnly: hasRedMeat && !hasChicken
+            },
+            ReligiousRestrictions: {
+                Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
+                Kosher: 'Unknown',
+                Beef: hasBeef ? 'Yes' : 'No',
+                Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
+                Onion: hasOnion ? 'Yes' : 'No'
+            },
+            DietChoice: {
+                Keto: determineKeto(),
+                Paleo: determinePaleo(),
+                Mediterranean: determineMediterranean(),
+                SugarFree: determineSugarFree()
+            },
+            SustainabilityChoices: {
+                Local: "Uknown",
+                Organic: productData.description && productData.description.toLowerCase().includes("organic") ? 'Yes' : 'Unknown',
+                GeneticallyModified: productData.description && productData.description.toLowerCase().includes("gmo") ? 'Yes' : 'Unknown',
+
+            },
+            Packaging: {
+                FullyRecycled: "Uknown",
+                PartRecycled: "Uknown"
+            },
+            FoodRatings: {
+                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                HighSugarSaltSpecificProducts: productData.nutriments &&
+                    ((productData.nutriments.sugar !== undefined && productData.nutriments.sugar > 40) ||
+                        (productData.nutriments.salt !== undefined && productData.nutriments.salt > 40)) ? 'Yes' : 'No'
+            },
+            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
+        };
+
+        return result;
+    }
+    else {
+        const result = {
+            BarCodeNum: productData.code || productData.ean,
+            TimeStamp: productData.last_modified_t,
+            Allergens: {
+                celery: "Unknown",
+                cereals_containing_gluten: "Unknown",
+                crustaceans: "Unknown",
+                eggs: "Unknown",
+                fish: "Unknown",
+                lupin: "Unknown",
+                milk: "Unknown",
+                molluscs: "Unknown",
+                mustard: "Unknown",
+                nuts: "Unknown",
+                peanuts: "Unknown",
+                sesame_seeds: "Unknown",
+                soya_beans: "Unknown",
+                sulphur_dioxide: "Unknown"
+            },
+            LifestyleChoices: {
+                Vegan: 'Unknown',
+                LactoVegetarian: 'Unknown',
+                OvoVegetarian: 'Unknown',
+                LactoOvoVegetarian: 'Unknown',
+                Pescatarian: 'Unknown',
+                WhiteMeatOnly: 'Unknown',
+                RedMeatOnly: 'Unknown',
+            },
+            ReligiousRestrictions: {
+                Halal: 'Unknown',
+                Kosher: 'Unknown',
+                Beef: 'Unknown',
+                Jain: 'Unknown',
+                Onion: 'Unknown',
+            },
+            DietChoice: {
+                Keto: 'Unknown',
+                Paleo: 'Unknown',
+                Mediterranean: 'Unknown',
+                SugarFree: 'Unknown'
+            },
+            SustainabilityChoices: {
+                Local: 'Unknown',
+                Organic: 'Unknown',
+                GeneticallyModified: 'Unknown'
+            },
+            Packaging: {
+                FullyRecycled: 'Unknown',
+                PartRecycled: 'Unknown'
+            },
+            FoodRatings: {
+                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
+            },
+            CountryOfOrigin: 'Unknown'
+        };
+        return result;
+    }
 }
-
 
