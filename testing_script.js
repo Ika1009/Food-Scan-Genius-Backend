@@ -106,7 +106,11 @@ async function fetchDataAndProcess(barcode) {
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
 
-        
+    // Check if 'ingredients' is a string and not empty
+    if (typeof data.ingredients === 'string' && data.ingredients.trim() !== '') {
+        data.ingredients_text = data.ingredients;
+        data.ingredients = [];
+    }    
     // Check if ingredients are still empty and ingredient_text is not empty or null
     if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
         // Remove the "INGREDIENTS:" prefix
@@ -562,7 +566,7 @@ function mergeApiResponseWithUSDAData(apiResponse, data) {
         'brandOwner': 'brands',  // Assuming 'brandOwner' refers to 'brands'
         'dataSource': 'dataSource',  // Not found in topLevelFields
         'description': 'description',  // Assuming 'description' might be like 'generic_name'
-        'ingredients': 'ingredients',
+        'ingredients': 'ingredients_text',
         'servingSize': 'serving_size',
         'servingSizeUnit': 'servingSizeUnit',  // Not found in topLevelFields
         'discontinuedDate': 'expiration_date',  // Assuming 'discontinuedDate' is like 'expiration_date'
@@ -688,8 +692,13 @@ function processApiResponseToLabels(productData, apiStatus) {
     if (!productData) {
         throw new Error("Response data is missing.");
     }
-    if (apiStatus.openFoodFacts === "SUCCESS" && productData.ingredients && Array.isArray(productData.ingredients)) {
+    if (apiStatus.openFoodFacts === "SUCCESS" && 
+    ((productData.ingredients && Array.isArray(productData.ingredients) && productData.ingredients.length > 0) &&
+    (productData.tags && Array.isArray(productData.tags) && productData.tags.length > 0) &&
+    (productData.keywords && Array.isArray(productData.keywords) && productData.keywords.length > 0) &&
+    (productData.traces && Array.isArray(productData.traces) && productData.traces.length > 0))) {
 
+        console.log(productData.ingredients);
         const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
         const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
         const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));

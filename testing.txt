@@ -43,7 +43,80 @@
     "polyunsaturated-fat_100g": null,
     "nutrient_levels": null
   },
-  "ingredients": "POTATOES, VEGETABLE OIL (SUNFLOWER, SAFFLOWER, CANOLA, CORN, COTTONSEED AND/OR RICE OIL), SALT, CITRIC ACID, SUGAR, YEAST EXTRACT, MALTODEXTRIN, HYDROLYZED SOY PROTEIN, SODIUM DIACETATE, ARTIFICIAL COLOR (RED 40 LAKE, YELLOW 6 LAKE), ONION POWDER, EXTRACTIVES OF PAPRIKA, NATURAL FLAVOR (INCLUDING RED PEPPER EXTRACT AND LIME EXTRACT).",
+  "ingredients": [
+    {
+      "id": "POTATOES",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "VEGETABLE OIL (SUNFLOWER",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "SAFFLOWER",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "CANOLA",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "CORN",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "COTTONSEED AND/OR RICE OIL)",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "SALT",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "CITRIC ACID",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "SUGAR",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "YEAST EXTRACT",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "MALTODEXTRIN",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "HYDROLYZED SOY PROTEIN",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "SODIUM DIACETATE",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "ARTIFICIAL COLOR (RED 40 LAKE",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "YELLOW 6 LAKE)",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "ONION POWDER",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "EXTRACTIVES OF PAPRIKA",
+      "percent_estimate": 5.6
+    },
+    {
+      "id": "NATURAL FLAVOR (INCLUDING RED PEPPER EXTRACT AND LIME EXTRACT).",
+      "percent_estimate": 5.6
+    }
+  ],
   "apiStatus": {
     "openFoodFacts": "SUCCESS",
     "upc": "SUCCESS",
@@ -1678,7 +1751,7 @@
     "2020"
   ],
   "ingredients_tags": null,
-  "ingredients_text": null,
+  "ingredients_text": "POTATOES, VEGETABLE OIL (SUNFLOWER, SAFFLOWER, CANOLA, CORN, COTTONSEED AND/OR RICE OIL), SALT, CITRIC ACID, SUGAR, YEAST EXTRACT, MALTODEXTRIN, HYDROLYZED SOY PROTEIN, SODIUM DIACETATE, ARTIFICIAL COLOR (RED 40 LAKE, YELLOW 6 LAKE), ONION POWDER, EXTRACTIVES OF PAPRIKA, NATURAL FLAVOR (INCLUDING RED PEPPER EXTRACT AND LIME EXTRACT).",
   "labels_hierarchy": [
     "en:no-gluten"
   ],
