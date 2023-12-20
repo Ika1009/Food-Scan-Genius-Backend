@@ -922,7 +922,7 @@ function processApiResponseToLabels(productData, apiStatus) {
 
         return result;
     }
-    else if ((apiStatus.nutritionix === "SUCCESS" || apiStatus.edamam === "SUCCESS") && productData.ingredients_text && productData.ingredients_text.trim() !== "") {
+    else if (productData.ingredients_text && productData.ingredients_text.trim() !== "") {
         //console.log("INGREDIENTS LOWER TEXT IS: " + productData.ingredients_text.toLowerCase());
 
         const containsIngredient = (keyword) => {
