@@ -1,1 +1,0 @@
-Error fetching data for barcode 5000159461122: ReferenceError: c is not defined
