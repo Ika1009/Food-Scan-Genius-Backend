@@ -266,13 +266,21 @@ async function fetchDataAndProcess(barcode) {
         data.apiStatus.nutritionix = 'ERROR: Fetch Failed'; // Mark as error
     }
 
+    function toTitleCase(str) {
+        return str.replace(/\w\S*/g, function(txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        });
+    }    
+
     // Check if 'ingredients' is a string and not empty
     if (typeof data.ingredients === 'string' && data.ingredients.trim() !== '') {
-        data.ingredients_text = data.ingredients;
+        data.ingredients_text = toTitleCase(data.ingredients);
         data.ingredients = [];
     }    
     // Check if ingredients are still empty and ingredient_text is not empty or null
     if (data.ingredients.length === 0 && data.ingredients_text && data.ingredients_text.trim() !== '') {
+        data.ingredients_text = toTitleCase(data.ingredients_text); // Apply TitleCase
+
         // Remove the "INGREDIENTS:" prefix
         let cleanedText = data.ingredients_text.replace(/^INGREDIENTS:\s*/, '');
 
@@ -318,9 +326,16 @@ async function fetchDataAndProcess(barcode) {
             ingredient.percent_estimate = parseFloat(ingredient.percent_estimate.toFixed(1));
             return ingredient;
         });
-}
+    }
 
-
+    for (let key in data.nutriments) {
+        if (data.nutriments.hasOwnProperty(key)) {
+            let value = data.nutriments[key];
+            if (typeof value === 'number' && !Number.isInteger(value)) {
+                data.nutriments[key] = parseFloat(value.toFixed(2));
+            }
+        }
+    }
 
     // Sorting nuriments
     //const sortedPairs = Object.entries(data.nutriments)
