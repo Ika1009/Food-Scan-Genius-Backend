@@ -45,7 +45,7 @@ async function fetchAnalysis() {
                 noProductFound[0] = barcode; // Put the barcode in the first column
                 fs.appendFileSync('analysis.csv', noProductFound.join(',') + '\n');
             } else {
-                console.log(response.data);
+                //console.log(response.data);
                 const analysis = response.analysis;
                 const additionalData = {
                     brands: response.data.brands || response.data.brand || response.data.brand_name,
