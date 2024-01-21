@@ -3,6 +3,15 @@ import AWS from 'aws-sdk';
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
+//Edamam
+const APP_ID = '89003ab9';
+const APP_KEY = '89379976073355baf935fb83d57677f3';
+//USDA
+const API_KEY_USDA = '1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9';
+//Nutritionix
+const NUTRITIONIX_APP_ID = '918f9c08';
+const NUTRITIONIX_API_KEY = '3b8384ce0ff9e531b1d812f72c675b6c';
+
 export const handler = async (event) => {
     function isProductNotFound(data) {
         // Check if the only properties in data are nutriments, ingredients, analysis, and apiStatus
@@ -542,8 +551,7 @@ function mergeApiResponseWithExtractedData(apiResponse, data) {
 
 async function getProductByEdamam(barcode) {
     const BASE_URL = 'https://api.edamam.com/api/food-database/v2/parser';
-    const APP_ID = '89003ab9';
-    const APP_KEY = '89379976073355baf935fb83d57677f3';
+
 
     try {
         const response = await axios.get(BASE_URL, {
@@ -655,8 +663,6 @@ function mergeApiResponseWithEdamamData(apiResponse, data) {
 
 //#region USDA API
 
-const API_KEY_USDA = '1bQJHgcJvDKcnexDwE12u75KZAsbxH5ew2CIDdW9';
-
 async function USDA_searchFoodByName(query, pageSize = 50, pageNumber = 1) {
     const endpoint = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=${pageSize}&pageNumber=${pageNumber}&api_key=${API_KEY_USDA}`;
 
@@ -740,9 +746,6 @@ function mergeApiResponseWithUSDAData(apiResponse, data) {
 //#endregion
 
 //#region Nutritionix
-
-const NUTRITIONIX_APP_ID = '918f9c08';
-const NUTRITIONIX_API_KEY = '3b8384ce0ff9e531b1d812f72c675b6c';  // You provided two API keys; I'm using the first one here
 
 async function getProductByNutritionix(barcode) {
     const BASE_URL = 'https://trackapi.nutritionix.com/v2/search/item';
