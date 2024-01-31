@@ -341,7 +341,7 @@ async function fetchDataAndProcess(barcode) {
         if (data.nutriments.hasOwnProperty(key)) {
             let value = data.nutriments[key];
             if (typeof value === 'number' && !Number.isInteger(value)) {
-                data.nutriments[key] = parseFloat(value.toFixed(2));
+                data.nutriments[key] = parseFloat(value.toFixed(1));
             }
         }
     }
