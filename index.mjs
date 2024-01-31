@@ -345,14 +345,25 @@ async function fetchDataAndProcess(barcode) {
             }
         }
     }
-
+    
     // Sorting nuriments
-    //const sortedPairs = Object.entries(data.nutriments)
-    //    .filter(([key, value]) => value !== null)
-    //    .sort((a, b) => b[1] - a[1]);
-    //const sortedNutriments = {};
-    //for (const [key, value] of sortedPairs) { sortedNutriments[key] = value; }
-    //data.nutriments = sortedNutriments;
+    const sortedPairs = Object.entries(data.nutriments)
+    .filter(([key, value]) => typeof value === 'number' && !isNaN(value)) // Filter only numeric properties
+    .sort((a, b) => b[1] - a[1]);
+
+    const sortedNutriments = {};
+    for (const [key, value] of sortedPairs) {
+        sortedNutriments[key] = value;
+    }
+
+    // Add non-numeric properties back to the sorted object
+    for (const [key, value] of Object.entries(data.nutriments)) {
+        if (!(key in sortedNutriments)) {
+            sortedNutriments[key] = value;
+        }
+    }
+
+    data.nutriments = sortedNutriments;
 
     return data;
 }
