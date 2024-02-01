@@ -363,6 +363,16 @@ async function fetchDataAndProcess(barcode) {
         }
     }
 
+    
+    // Calculate the percent_estimate only for those ingredients that don't have it
+    const ingredientsWithoutPercent = data.ingredients.filter(ingredient => !ingredient.hasOwnProperty('percent_estimate'));
+    const equalPercentEstimate = 100 / ingredientsWithoutPercent.length;
+    
+    ingredientsWithoutPercent.forEach(ingredient => {
+      ingredient.percent_estimate = equalPercentEstimate;
+    });
+
+
     data.nutriments = sortedNutriments;
 
     return data;
