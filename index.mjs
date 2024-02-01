@@ -375,10 +375,16 @@ async function fetchDataAndProcess(barcode) {
 
     data.nutriments = sortedNutriments;
 
-    
+    //If image is empty replace it with non empty one
     if (!data.image_url && data.photo) {
         data.image_url = data.photo.thumb;
     }
+    // Check if image_url is empty and images array is not empty
+    // if ((!data.image_url || data.image_url.isEmpty) && data.images.isNotEmpty) {
+    //     // Assuming images is an array and the first item has a property that holds the URL
+    //     // Replace image_url with the URL of the first image in the array
+    //     data.image_url = data.images[0].url; // Adjust the property access as per your data structure
+    // }
 
     
     return data;
