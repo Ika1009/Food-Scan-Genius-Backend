@@ -375,6 +375,12 @@ async function fetchDataAndProcess(barcode) {
 
     data.nutriments = sortedNutriments;
 
+    
+    if (!data.image_url && data.photo) {
+      data.photo.thumb = data.imageUrl;
+    }
+
+    
     return data;
 }
 
