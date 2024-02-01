@@ -377,7 +377,7 @@ async function fetchDataAndProcess(barcode) {
 
     
     if (!data.image_url && data.photo) {
-      data.photo.thumb = data.imageUrl;
+        data.imageUrldata = data.photo.thumb;
     }
 
     
