@@ -1055,14 +1055,14 @@ function processApiResponseToLabels(productData, apiStatus) {
                 SugarFree: determineSugarFree()
             },
             SustainabilityChoices: {
-                Local: "Uknown",
+                Local: null,
                 Organic: productData.description && productData.description.toLowerCase().includes("organic") ? 'Yes' : 'Unknown',
                 GeneticallyModified: productData.description && productData.description.toLowerCase().includes("gmo") ? 'Yes' : 'Unknown',
 
             },
             Packaging: {
-                FullyRecycled: "Uknown",
-                PartRecycled: "Uknown"
+                FullyRecycled: null,
+                PartRecycled: null
             },
             FoodRatings: {
                 ABCDERatings: productData.nutrition_grades || 'Unknown',
@@ -1080,20 +1080,20 @@ function processApiResponseToLabels(productData, apiStatus) {
             BarCodeNum: productData.code || productData.ean,
             TimeStamp: productData.last_modified_t,
             Allergens: {
-                celery: "Unknown",
-                cereals_containing_gluten: "Unknown",
-                crustaceans: "Unknown",
-                eggs: "Unknown",
-                fish: "Unknown",
-                lupin: "Unknown",
-                milk: "Unknown",
-                molluscs: "Unknown",
-                mustard: "Unknown",
-                nuts: "Unknown",
-                peanuts: "Unknown",
-                sesame_seeds: "Unknown",
-                soya_beans: "Unknown",
-                sulphur_dioxide: "Unknown"
+                celery: null,
+                cereals_containing_gluten: null,
+                crustaceans: null,
+                eggs: null,
+                fish: null,
+                lupin: null,
+                milk: null,
+                molluscs: null,
+                mustard: null,
+                nuts: null,
+                peanuts: null,
+                sesame_seeds: null,
+                soya_beans: null,
+                sulphur_dioxide: null
             },
             LifestyleChoices: {
                 Vegan: 'Unknown',
