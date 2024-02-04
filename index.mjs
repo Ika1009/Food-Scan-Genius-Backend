@@ -944,7 +944,7 @@ function processApiResponseToLabels(productData, apiStatus) {
             },
             ReligiousRestrictions: {
                 Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
-                Kosher: containsTag(productData.labels_tags, 'kosher') || 'Unknown',
+                Kosher: containsTag(productData.labels_tags, 'kosher') || null,
                 Beef: hasBeef ? 'Yes' : 'No',
                 Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
                 Onion: hasOnion ? 'Yes' : 'No',
@@ -965,10 +965,10 @@ function processApiResponseToLabels(productData, apiStatus) {
                 PartRecycled: containsTag(productData.packaging_tags, 'part-recycled')
             },
             FoodRatings: {
-                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                ABCDERatings: productData.nutrition_grades || null,
                 HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
             },
-            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
+            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || null
         };
 
         return result;
@@ -1043,7 +1043,7 @@ function processApiResponseToLabels(productData, apiStatus) {
             },
             ReligiousRestrictions: {
                 Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
-                Kosher: 'Unknown',
+                Kosher: null,
                 Beef: hasBeef ? 'Yes' : 'No',
                 Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
                 Onion: hasOnion ? 'Yes' : 'No'
@@ -1056,8 +1056,8 @@ function processApiResponseToLabels(productData, apiStatus) {
             },
             SustainabilityChoices: {
                 Local: null,
-                Organic: productData.description && productData.description.toLowerCase().includes("organic") ? 'Yes' : 'Unknown',
-                GeneticallyModified: productData.description && productData.description.toLowerCase().includes("gmo") ? 'Yes' : 'Unknown',
+                Organic: productData.description && productData.description.toLowerCase().includes("organic") ? 'Yes' : null,
+                GeneticallyModified: productData.description && productData.description.toLowerCase().includes("gmo") ? 'Yes' : null,
 
             },
             Packaging: {
@@ -1065,12 +1065,12 @@ function processApiResponseToLabels(productData, apiStatus) {
                 PartRecycled: null
             },
             FoodRatings: {
-                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                ABCDERatings: productData.nutrition_grades || null,
                 HighSugarSaltSpecificProducts: productData.nutriments &&
                     ((productData.nutriments.sugar !== undefined && productData.nutriments.sugar > 40) ||
                         (productData.nutriments.salt !== undefined && productData.nutriments.salt > 40)) ? 'Yes' : 'No'
             },
-            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || 'Unknown'
+            CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || null
         };
 
         return result;
@@ -1096,41 +1096,41 @@ function processApiResponseToLabels(productData, apiStatus) {
                 sulphur_dioxide: null
             },
             LifestyleChoices: {
-                Vegan: 'Unknown',
-                LactoVegetarian: 'Unknown',
-                OvoVegetarian: 'Unknown',
-                LactoOvoVegetarian: 'Unknown',
-                Pescatarian: 'Unknown',
-                WhiteMeatOnly: 'Unknown',
-                RedMeatOnly: 'Unknown',
+                Vegan: null,
+                LactoVegetarian: null,
+                OvoVegetarian: null,
+                LactoOvoVegetarian: null,
+                Pescatarian: null,
+                WhiteMeatOnly: null,
+                RedMeatOnly: null,
             },
             ReligiousRestrictions: {
-                Halal: 'Unknown',
-                Kosher: 'Unknown',
-                Beef: 'Unknown',
-                Jain: 'Unknown',
-                Onion: 'Unknown',
+                Halal: null,
+                Kosher: null,
+                Beef: null,
+                Jain: null,
+                Onion: null,
             },
             DietChoice: {
-                Keto: 'Unknown',
-                Paleo: 'Unknown',
-                Mediterranean: 'Unknown',
-                SugarFree: 'Unknown'
+                Keto: null,
+                Paleo: null,
+                Mediterranean: null,
+                SugarFree: null
             },
             SustainabilityChoices: {
-                Local: 'Unknown',
-                Organic: 'Unknown',
-                GeneticallyModified: 'Unknown'
+                Local: null,
+                Organic: null,
+                GeneticallyModified: null
             },
             Packaging: {
-                FullyRecycled: 'Unknown',
-                PartRecycled: 'Unknown'
+                FullyRecycled: null,
+                PartRecycled: null
             },
             FoodRatings: {
-                ABCDERatings: productData.nutrition_grades || 'Unknown',
+                ABCDERatings: productData.nutrition_grades || null,
                 HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
             },
-            CountryOfOrigin: 'Unknown'
+            CountryOfOrigin: null
         };
         return result;
     }
