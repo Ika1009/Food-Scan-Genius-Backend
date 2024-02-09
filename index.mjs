@@ -885,10 +885,10 @@ function processApiResponseToLabels(productData, apiStatus) {
     (productData.keywords && Array.isArray(productData.keywords) && productData.keywords.length > 0) &&
     (productData.traces && Array.isArray(productData.traces) && productData.traces.length > 0))) {
 
-        const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? 'Yes' : 'No';
-        const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? 'Yes' : 'No';
+        const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? true : false;
+        const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? true : false;
         const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
-        const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : 'No';
+        const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : false;
 
         const hasBeef = containsIngredient(productData.ingredients, 'beef');
         const hasPork = containsIngredient(productData.ingredients, 'pork');
@@ -908,10 +908,10 @@ function processApiResponseToLabels(productData, apiStatus) {
             const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
             const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
 
-            if (checkTag) return 'Yes';
-            if (checkIngredient) return 'Yes';
+            if (checkTag) return true;
+            if (checkIngredient) return true;
             if (checkTrace) return 'Traces';
-            return 'No';
+            return false;
         };
 
         const result = {
@@ -934,20 +934,20 @@ function processApiResponseToLabels(productData, apiStatus) {
                 sulphur_dioxide: checkAllSources(productData.allergens_tags, productData.ingredients, productData.traces_tags, ['sulphur-dioxide', 'sulphur', 'sulphites'])
             },
             LifestyleChoices: {
-                Vegan: !hasAnimalProducts && productData.ingredients && productData.ingredients.every(i => i.vegan === 'yes') ? 'Yes' : 'No',
-                LactoVegetarian: hasMilk && !hasMeat && !hasFish ? 'Yes' : 'No',
-                OvoVegetarian: hasEgg && !hasMeat && !hasFish ? 'Yes' : 'No',
-                LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish ? 'Yes' : 'No',
-                Pescatarian: hasFish && !hasMeat ? 'Yes' : 'No',
-                WhiteMeatOnly: hasChicken && !hasRedMeat ? 'Yes' : 'No',
-                RedMeatOnly: hasRedMeat && !hasChicken ? 'Yes' : 'No',
+                Vegan: !hasAnimalProducts && productData.ingredients && productData.ingredients.every(i => i.vegan === true) ? true : false,
+                LactoVegetarian: hasMilk && !hasMeat && !hasFish ? true : false,
+                OvoVegetarian: hasEgg && !hasMeat && !hasFish ? true : false,
+                LactoOvoVegetarian: (hasMilk || hasEgg) && !hasMeat && !hasFish ? true : false,
+                Pescatarian: hasFish && !hasMeat ? true : false,
+                WhiteMeatOnly: hasChicken && !hasRedMeat ? true : false,
+                RedMeatOnly: hasRedMeat && !hasChicken ? true : false,
             },
             ReligiousRestrictions: {
-                Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
+                Halal: hasPork ? false : (hasBeef || hasChicken ? 'Check Certification' : true),
                 Kosher: containsTag(productData.labels_tags, 'kosher') || null,
-                Beef: hasBeef ? 'Yes' : 'No',
-                Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
-                Onion: hasOnion ? 'Yes' : 'No',
+                Beef: hasBeef ? true : false,
+                Jain: hasOnion || hasGarlic ? false : true,
+                Onion: hasOnion ? true : false,
             },
             DietChoice: {
                 Keto: containsKeyword(productData._keywords, 'keto'),
@@ -966,7 +966,7 @@ function processApiResponseToLabels(productData, apiStatus) {
             },
             FoodRatings: {
                 ABCDERatings: productData.nutrition_grades || null,
-                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
+                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? true : false
             },
             CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || null
         };
@@ -1042,11 +1042,11 @@ function processApiResponseToLabels(productData, apiStatus) {
                 RedMeatOnly: hasRedMeat && !hasChicken
             },
             ReligiousRestrictions: {
-                Halal: hasPork ? 'No' : (hasBeef || hasChicken ? 'Check Certification' : 'Yes'),
+                Halal: hasPork ? false : (hasBeef || hasChicken ? 'Check Certification' : true),
                 Kosher: null,
-                Beef: hasBeef ? 'Yes' : 'No',
-                Jain: hasOnion || hasGarlic ? 'No' : 'Yes',
-                Onion: hasOnion ? 'Yes' : 'No'
+                Beef: hasBeef ? true : false,
+                Jain: hasOnion || hasGarlic ? false : true,
+                Onion: hasOnion ? true : false
             },
             DietChoice: {
                 Keto: determineKeto(),
@@ -1056,8 +1056,8 @@ function processApiResponseToLabels(productData, apiStatus) {
             },
             SustainabilityChoices: {
                 Local: null,
-                Organic: productData.description && productData.description.toLowerCase().includes("organic") ? 'Yes' : null,
-                GeneticallyModified: productData.description && productData.description.toLowerCase().includes("gmo") ? 'Yes' : null,
+                Organic: productData.description && productData.description.toLowerCase().includes("organic") ? true : null,
+                GeneticallyModified: productData.description && productData.description.toLowerCase().includes("gmo") ? true : null,
 
             },
             Packaging: {
@@ -1068,7 +1068,7 @@ function processApiResponseToLabels(productData, apiStatus) {
                 ABCDERatings: productData.nutrition_grades || null,
                 HighSugarSaltSpecificProducts: productData.nutriments &&
                     ((productData.nutriments.sugar !== undefined && productData.nutriments.sugar > 40) ||
-                        (productData.nutriments.salt !== undefined && productData.nutriments.salt > 40)) ? 'Yes' : 'No'
+                        (productData.nutriments.salt !== undefined && productData.nutriments.salt > 40)) ? true : false
             },
             CountryOfOrigin: (productData.origins_tags && productData.origins_tags[0]) || null
         };
@@ -1128,7 +1128,7 @@ function processApiResponseToLabels(productData, apiStatus) {
             },
             FoodRatings: {
                 ABCDERatings: productData.nutrition_grades || null,
-                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? 'Yes' : 'No'
+                HighSugarSaltSpecificProducts: productData.nutrient_levels && (productData.nutrient_levels.sugars === 'high' || productData.nutrient_levels.salt === 'high') ? true : false
             },
             CountryOfOrigin: null
         };
