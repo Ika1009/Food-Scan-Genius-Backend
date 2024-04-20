@@ -887,33 +887,31 @@ function processApiResponseToLabels(productData, apiStatus) {
 
         const containsTag = (tagArray, keyword) => tagArray && tagArray.some(tag => tag.includes(keyword)) ? true : false;
         const containsKeyword = (keywords, keyword) => keywords && keywords.includes(keyword) ? true : false;
-        const containsIngredient = (ingredients, keyword) => ingredients && ingredients.some(ing => ing.text.toLowerCase().includes(keyword));
-        const checkTraces = (tracesArray, keyword) => tracesArray && tracesArray.includes(keyword) ? 'Traces' : false;
-
-        const hasBeef = containsIngredient(productData.ingredients, 'beef');
-        const hasPork = containsIngredient(productData.ingredients, 'pork');
-        const hasChicken = containsIngredient(productData.ingredients, 'chicken');
-        const hasMilk = containsIngredient(productData.ingredients, 'milk');
-        const hasEgg = containsIngredient(productData.ingredients, 'egg');
-        const hasOnion = containsIngredient(productData.ingredients, 'onion');
-        const hasGarlic = containsIngredient(productData.ingredients, 'garlic');
-        const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
-        const hasMeat = hasBeef || hasPork || hasChicken;
-        const hasFish = containsIngredient(productData.ingredients, 'fish');
-        const hasRedMeat = hasBeef || hasPork;
-
+        
         // Define a function to check for multiple keywords
         const checkAllSources = (tagArray, ingredientArray, traceArray, keywords) => {
             const checkTag = tagArray && tagArray.some(tag => keywords.some(keyword => tag.includes(keyword)));
             const checkIngredient = ingredientArray && ingredientArray.some(ing => keywords.some(keyword => ing.text.toLowerCase().includes(keyword)));
             const checkTrace = traceArray && traceArray.some(trace => keywords.some(keyword => trace.includes(keyword)));
-
+        
             if (checkTag) return true;
             if (checkIngredient) return true;
             if (checkTrace) return 'Traces';
             return false;
         };
-
+        
+        const hasBeef = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['beef']);
+        const hasPork = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['pork']);
+        const hasChicken = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['chicken']);
+        const hasMilk = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['milk']);
+        const hasEgg = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['egg']);
+        const hasOnion = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['onion']);
+        const hasGarlic = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['garlic']);
+        const hasAnimalProducts = hasBeef || hasPork || hasChicken || hasMilk || hasEgg;
+        const hasMeat = hasBeef || hasPork || hasChicken;
+        const hasFish = checkAllSources(productData.tags, productData.ingredients, productData.traces, ['fish']);
+        const hasRedMeat = hasBeef || hasPork;
+        
         const result = {
             BarCodeNum: productData.code || productData.ean,
             TimeStamp: productData.last_modified_t,
