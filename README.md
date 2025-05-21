@@ -4,10 +4,14 @@ Living with food allergies or specific dietary restrictions? Say hello to **Food
 
 👉 Explore the app here: https://scangeni.us/
 
-**Note: This project was made for a Fiverr client**
+**Note: This project was made for a Fiverr client.**
 
 
-![Food Scan Genius Logo](./icons/fsg.png)
+![Promo Image](./fsg_promo0.png)
+![Promo Image](./fsg_promo1.png)
+![Promo Image](./fsg_promo2.png)
+![Promo Image](./fsg_promo4.png)
+
 
 ## 🍏 Understanding the Need
 
@@ -15,7 +19,7 @@ Navigating the world of food products, especially with food allergies or dietary
 
 ## 🍓 Why Food Scan Genius?
 
-**3.5 Million Product SKUs** from around the world reside in our database. Our edge is the combination of public and private datasets, ensuring unmatched accuracy and reliability. Our mission is to give you not just allergen information, but an all-rounded view into your food choices.
+**3.5 Million Product SKUs** from around the world reside in our database. Our edge is the combination of public and private datasets, ensuring unmatched accuracy and reliability. Our mission is to give you not just allergen information, but an all-around view into your food choices.
 
 ## 🍍 Core Features
 
