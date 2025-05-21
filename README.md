@@ -6,20 +6,20 @@ Living with food allergies or specific dietary restrictions? Say hello to **Food
 
 **Note: This project was made for a Fiverr client.**
 
-
 ![Promo Image](./fsg_promo0.png)
-![Promo Image](./fsg_promo1.png)
-![Promo Image](./fsg_promo2.png)
-![Promo Image](./fsg_promo4.png)
-
 
 ## 🍏 Understanding the Need
 
 Navigating the world of food products, especially with food allergies or dietary needs, is not just tricky but also crucial. The sheer range of consequences from consuming unsuitable ingredients can range from mild discomfort to severe life-threatening reactions. The demand for a comprehensive tool has never been higher.
 
+![Promo Image](./fsg_promo1.png)
+
 ## 🍓 Why Food Scan Genius?
 
 **3.5 Million Product SKUs** from around the world reside in our database. Our edge is the combination of public and private datasets, ensuring unmatched accuracy and reliability. Our mission is to give you not just allergen information, but an all-around view into your food choices.
+
+![Promo Image](./fsg_promo2.png)
+
 
 ## 🍍 Core Features
 
@@ -34,6 +34,8 @@ Navigating the world of food products, especially with food allergies or dietary
 - **Allergen Alerts & Warnings**: Real-time updates to keep you informed and safe.
   
 - **Location Finder**: On the go? Find allergen-friendly grocery stores and restaurants nearby.
+
+![Promo Image](./fsg_promo4.png)
 
 ## 🍔 What Users are Saying
 
