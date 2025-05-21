@@ -2,6 +2,8 @@
 
 Living with food allergies or specific dietary restrictions? Say hello to **Food Scan Genius**, the app designed with you in mind. Dive into the most comprehensive and reliable tool for food choices tailored to your needs.
 
+👉 Explore the app here: https://scangeni.us/
+
 ![Food Scan Genius Logo](./icons/fsg.png)
 
 ## 🍏 Understanding the Need
