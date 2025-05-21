@@ -4,7 +4,7 @@ Living with food allergies or specific dietary restrictions? Say hello to **Food
 
 👉 Explore the app here: https://scangeni.us/
 
-**Note: This project was made for a Fiverr client
+**Note: This project was made for a Fiverr client**
 
 ![Food Scan Genius Logo](./icons/fsg.png)
 
